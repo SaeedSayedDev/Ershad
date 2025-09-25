@@ -1,0 +1,1208 @@
+@extends('include.app')
+
+@section('header')
+    {{-- <script src="{{ asset('asset/script/appointments.js') }}"></script> --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <style>
+        .modal-lg {
+            max-width: 900px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+        }
+
+        .required {
+            color: red;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+    </style>
+@endsection
+
+@section('content')
+    <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>{{ __('Appointments') }}</h4>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addAppointmentModal">
+                <i class="fa fa-plus"></i> {{ __('Add Appointment') }}
+            </button>
+        </div>
+        <div class="card-body">
+
+            <ul class="nav nav-pills border-b mb-3  ml-0">
+                <li role="presentation" class="nav-item"><a class="nav-link pointer active" href="#allSection"
+                        aria-controls="home" role="tab" data-toggle="tab">{{ __('All Appointments') }}<span
+                            class="badge badge-transparent "></span></a>
+                </li>
+                <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#pendingSection" role="tab"
+                        data-toggle="tab">{{ __('Pending') }}
+                        <span class="badge badge-transparent "></span></a>
+                </li>
+                <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#acceptedSection" role="tab"
+                        data-toggle="tab">{{ __('Accepted') }}
+                        <span class="badge badge-transparent "></span></a>
+                </li>
+                <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#completedSection" role="tab"
+                        data-toggle="tab">{{ __('Completed') }}
+                        <span class="badge badge-transparent "></span></a>
+                </li>
+                <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#cancelledSection" role="tab"
+                        data-toggle="tab">{{ __('Cancelled') }}
+                        <span class="badge badge-transparent "></span></a>
+                </li>
+                <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#declinedSection" role="tab"
+                        data-toggle="tab">{{ __('Declined') }}
+                        <span class="badge badge-transparent "></span></a>
+                </li>
+            </ul>
+
+            <div class="tab-content tabs" id="home">
+                {{-- All --}}
+                <div role="tabpanel" class="row tab-pane active" id="allSection">
+                    <div class="table-responsive col-12">
+                        <table class="table table-striped w-100 word-wrap" id="allAppointmentTable">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Appointments Number') }}</th>
+                                    <th>{{ __('User') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Date & Time') }}</th>
+                                    <th>{{ __('Service Amount') }}</th>
+                                    <th>{{ __('Discount Amount') }}</th>
+                                    <th>{{ __('Subtotal') }}</th>
+                                    <th>{{ __('Total Tax Amount') }}</th>
+                                    <th>{{ __('Payable Amount') }}</th>
+                                    <th>{{ __('Order Date') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Pending --}}
+                <div role="tabpanel" class="row tab-pane" id="pendingSection">
+                    <div class="table-responsive col-12">
+                        <table class="table table-striped w-100" id="pendingAppointmentTable">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Appointments Number') }}</th>
+                                    <th>{{ __('User') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Date & Time') }}</th>
+                                    <th>{{ __('Service Amount') }}</th>
+                                    <th>{{ __('Discount Amount') }}</th>
+                                    <th>{{ __('Subtotal') }}</th>
+                                    <th>{{ __('Total Tax Amount') }}</th>
+                                    <th>{{ __('Payable Amount') }}</th>
+                                    <th>{{ __('Order Date') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Accepted --}}
+                <div role="tabpanel" class="row tab-pane" id="acceptedSection">
+                    <div class="table-responsive col-12">
+                        <table class="table table-striped w-100" id="acceptedAppointmentTable">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Appointments Number') }}</th>
+                                    <th>{{ __('User') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Date & Time') }}</th>
+                                    <th>{{ __('Service Amount') }}</th>
+                                    <th>{{ __('Discount Amount') }}</th>
+                                    <th>{{ __('Subtotal') }}</th>
+                                    <th>{{ __('Total Tax Amount') }}</th>
+                                    <th>{{ __('Payable Amount') }}</th>
+                                    <th>{{ __('Order Date') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Completed --}}
+                <div role="tabpanel" class="row tab-pane" id="completedSection">
+                    <div class="table-responsive col-12">
+                        <table class="table table-striped w-100" id="completedAppointmentTable">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Appointments Number') }}</th>
+                                    <th>{{ __('User') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Date & Time') }}</th>
+                                    <th>{{ __('Service Amount') }}</th>
+                                    <th>{{ __('Discount Amount') }}</th>
+                                    <th>{{ __('Subtotal') }}</th>
+                                    <th>{{ __('Total Tax Amount') }}</th>
+                                    <th>{{ __('Payable Amount') }}</th>
+                                    <th>{{ __('Order Date') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Cancelled --}}
+                <div role="tabpanel" class="row tab-pane" id="cancelledSection">
+                    <div class="table-responsive col-12">
+                        <table class="table table-striped w-100" id="cancelledAppointmentTable">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Appointments Number') }}</th>
+                                    <th>{{ __('User') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Date & Time') }}</th>
+                                    <th>{{ __('Service Amount') }}</th>
+                                    <th>{{ __('Discount Amount') }}</th>
+                                    <th>{{ __('Subtotal') }}</th>
+                                    <th>{{ __('Total Tax Amount') }}</th>
+                                    <th>{{ __('Payable Amount') }}</th>
+                                    <th>{{ __('Order Date') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Declined --}}
+                <div role="tabpanel" class="row tab-pane" id="declinedSection">
+                    <div class="table-responsive col-12">
+                        <table class="table table-striped w-100" id="declinedAppointmentTable">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Appointments Number') }}</th>
+                                    <th>{{ __('User') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Date & Time') }}</th>
+                                    <th>{{ __('Service Amount') }}</th>
+                                    <th>{{ __('Discount Amount') }}</th>
+                                    <th>{{ __('Subtotal') }}</th>
+                                    <th>{{ __('Total Tax Amount') }}</th>
+                                    <th>{{ __('Payable Amount') }}</th>
+                                    <th>{{ __('Order Date') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Add Appointment Modal --}}
+    <div class="modal fade" id="addAppointmentModal" tabindex="-1" role="dialog"
+        aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAppointmentModalLabel">{{ __('Add New Appointment') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="addAppointmentForm" action="{{ route('AddAppointmentsForAdmin') }}" method="POST"
+                    enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="user_id">{{ __('User') }} <span class="required">*</span></label>
+                                    <select class="form-control" id="user_id" name="user_id" required>
+                                        <option value="">{{ __('Select User') }}</option>
+                                        @if (isset($users))
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->fullname }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="doctor_id">{{ __('Doctor') }} <span class="required">*</span></label>
+                                    <select class="form-control" id="doctor_id" name="doctor_id" required>
+                                        <option value="">{{ __('Select Doctor') }}</option>
+                                        @if (isset($doctors))
+                                            @foreach ($doctors as $doctor)
+                                                <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="date">{{ __('Date') }} <span class="required">*</span></label>
+                                    <input type="date" class="form-control" id="date" name="date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="time">{{ __('Time') }} <span class="required">*</span></label>
+                                    <input type="time" class="form-control" id="time" name="time" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="type">{{ __('Type') }} <span class="required">*</span></label>
+                                    <select class="form-control" id="type" name="type" required>
+                                        <option value="0">{{ __('Online') }}</option>
+                                        <option value="1">{{ __('At Clinic') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="session_type">{{ __('Session Type') }}</label>
+                                    <select class="form-control" id="session_type" name="session_type">
+                                        <option value="voice">{{ __('Voice') }}</option>
+                                        <option value="video">{{ __('Video') }}</option>
+                                        <option value="chat">{{ __('Chat') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="status">{{ __('Status') }}</label>
+                                    <select class="form-control" id="status" name="status">
+                                        <option value="0">{{ __('Pending') }}</option>
+                                        <option value="1">{{ __('Accepted') }}</option>
+                                        <option value="2">{{ __('Completed') }}</option>
+                                        <option value="3">{{ __('Declined') }}</option>
+                                        <option value="4">{{ __('Cancelled') }}</option>
+                                        <option value="5">{{ __('Waiting for Payment') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="is_urgent">{{ __('Urgent') }}</label>
+                                    <select class="form-control" id="is_urgent" name="is_urgent">
+                                        <option value="0">{{ __('No') }}</option>
+                                        <option value="1">{{ __('Yes') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="problem">{{ __('Problem') }} <span class="required">*</span></label>
+                            <textarea class="form-control" id="problem" name="problem" rows="3" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="order_summary">{{ __('Order Summary') }} <span class="required">*</span></label>
+                            <textarea class="form-control" id="order_summary" name="order_summary" rows="3" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="service_amount">{{ __('Service Amount') }} <span
+                                            class="required">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" id="service_amount"
+                                        name="service_amount" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="discount_amount">{{ __('Discount Amount') }}</label>
+                                    <input type="number" step="0.01" class="form-control" id="discount_amount"
+                                        name="discount_amount" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="total_tax_amount">{{ __('Tax Amount') }}</label>
+                                    <input type="number" step="0.01" class="form-control" id="total_tax_amount"
+                                        name="total_tax_amount" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="subtotal">{{ __('Subtotal') }} <span class="required">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" id="subtotal"
+                                        name="subtotal" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="payable_amount">{{ __('Payable Amount') }} <span
+                                            class="required">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" id="payable_amount"
+                                        name="payable_amount" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="is_coupon_applied">{{ __('Coupon Applied') }}</label>
+                                    <select class="form-control" id="is_coupon_applied" name="is_coupon_applied">
+                                        <option value="0">{{ __('No') }}</option>
+                                        <option value="1">{{ __('Yes') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group" id="coupon_title_group" style="display: none;">
+                                <label for="coupon_title">{{ __('Coupon Title') }}</label>
+                                <input type="text" class="form-control" id="coupon_title" name="coupon_title">
+                            </div>
+                        </div>
+
+
+
+                        <div class="form-group">
+                            <label for="documents">{{ __('Documents') }}</label>
+                            <input type="file" class="form-control-file" id="documents" name="documents[]" multiple
+                                accept="image/*,.pdf">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            data-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Appointment') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Edit Appointment Modal --}}
+    <div class="modal fade" id="editAppointmentModal" tabindex="-1" role="dialog"
+        aria-labelledby="editAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAppointmentModalLabel">{{ __('Edit Appointment') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="editAppointmentForm" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" id="edit_appointment_id" name="appointment_id">
+                    <div class="modal-body">
+                        {{-- {{$data}} --}}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_user_id">{{ __('User') }} <span
+                                            class="required">*</span></label>
+                                    <select class="form-control" id="edit_user_id" name="user_id" required>
+                                        <option value="">{{ __('Select User') }}</option>
+                                        @if (isset($users))
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->fullname }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_doctor_id">{{ __('Doctor') }} <span
+                                            class="required">*</span></label>
+                                    <select class="form-control" id="edit_doctor_id" name="doctor_id" required>
+                                        <option value="">{{ __('Select Doctor') }}</option>
+                                        @if (isset($doctors))
+                                            @foreach ($doctors as $doctor)
+                                                <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_date">{{ __('Date') }} <span class="required">*</span></label>
+                                    <input type="date" class="form-control" id="edit_date" name="date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_time">{{ __('Time') }} <span class="required">*</span></label>
+                                    <input type="time" class="form-control" id="edit_time" name="time" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_type">{{ __('Type') }}</label>
+                                    <select class="form-control" id="edit_type" name="type">
+                                        <option value="0">{{ __('Online') }}</option>
+                                        <option value="1">{{ __('At Clinic') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_session_type">{{ __('Session Type') }}</label>
+                                    <select class="form-control" id="edit_session_type" name="session_type">
+                                        <option value="voice">{{ __('Voice') }}</option>
+                                        <option value="video">{{ __('Video') }}</option>
+                                        <option value="chat">{{ __('Chat') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_problem">{{ __('Problem') }} <span class="required">*</span></label>
+                            <textarea class="form-control" id="edit_problem" name="problem" rows="3" required></textarea>
+                        </div>
+
+                        {{-- <div class="form-group">
+                            <label for="edit_order_summary">{{ __('Order Summary') }}</label>
+                            <textarea class="form-control" id="edit_order_summary" name="order_summary" rows="3"></textarea>
+                        </div> --}}
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_service_amount">{{ __('Service Amount') }}</label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_service_amount"
+                                        name="service_amount">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_discount_amount">{{ __('Discount Amount') }}</label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_discount_amount"
+                                        name="discount_amount" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_total_tax_amount">{{ __('Tax Amount') }}</label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_total_tax_amount"
+                                        name="total_tax_amount" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_subtotal">{{ __('Subtotal') }}</label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_subtotal"
+                                        name="subtotal">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_payable_amount">{{ __('Payable Amount') }} <span
+                                            class="required">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_payable_amount"
+                                        name="payable_amount" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_status">{{ __('Status') }}</label>
+                                    <select class="form-control" id="edit_status" name="status">
+                                        <option value="0">{{ __('Pending') }}</option>
+                                        <option value="1">{{ __('Accepted') }}</option>
+                                        <option value="2">{{ __('Completed') }}</option>
+                                        <option value="3">{{ __('Declined') }}</option>
+                                        <option value="4">{{ __('Cancelled') }}</option>
+                                        <option value="5">{{ __('Waiting for Payment') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_is_urgent">{{ __('Urgent') }}</label>
+                                    <select class="form-control" id="edit_is_urgent" name="is_urgent">
+                                        <option value="0">{{ __('No') }}</option>
+                                        <option value="1">{{ __('Yes') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_is_coupon_applied">{{ __('Coupon Applied') }}</label>
+                                    <select class="form-control" id="edit_is_coupon_applied" name="is_coupon_applied">
+                                        <option value="0">{{ __('No') }}</option>
+                                        <option value="1">{{ __('Yes') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="edit_coupon_title_group" style="display: none;">
+                            <label for="edit_coupon_title">{{ __('Coupon Title') }}</label>
+                            <input type="text" class="form-control" id="edit_coupon_title" name="coupon_title">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            data-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Update Appointment') }}</button>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete Confirmation Modal --}}
+    <div class="modal fade" id="deleteAppointmentModal" tabindex="-1" role="dialog"
+        aria-labelledby="deleteAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAppointmentModalLabel">{{ __('Delete Appointment') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ __('Close') }}">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ __('Are you sure you want to delete this appointment?') }}</p>
+                    <form id="deleteAppointmentForm" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
+                        <input type="hidden" id="delete_appointment_id" name="appointment_id">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" form="deleteAppointmentForm"
+                        class="btn btn-danger">{{ __('Delete') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {{-- ##################################### script ############################### --}}
+    <script>
+        $(document).ready(function() {
+            $(".sideBarli").removeClass("activeLi");
+            $(".appointmentsSideA").addClass("activeLi");
+
+            // Initialize all DataTables with capital D
+            var allTable = $("#allAppointmentTable").DataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `${domainUrl}fetchAllAppointmentsList`,
+                    type: "POST",
+                    error: function(error) {
+                        console.log('All table error:', error);
+                    }
+                },
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        orderable: false,
+                    },
+                    {
+                        targets: [11], // Action column - last column
+                        render: function(data, type, row) {
+
+                            // Get the appointment ID from the last element
+                            const appointmentId = row[row.length - 1];
+                            // Assuming ID is at index 13
+                            return `
+                       <div class="action-buttons">
+                         ${data}
+                            <button type="button" class="btn btn-sm btn-primary btn-action" onclick="editAppointment('${appointmentId}')">
+                                <i class="fa fa-edit"></i> 
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger btn-action" onclick="deleteAppointment('${appointmentId}')">
+                                <i class="fa fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                        },
+                    },
+
+                ]
+            });
+
+            var pendingTable = $("#pendingAppointmentTable").DataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `${domainUrl}fetchPendingAppointmentsList`,
+                    type: "POST",
+                    error: function(error) {
+                        console.log('Pending table error:', error);
+                    }
+                },
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        orderable: false,
+                    },
+                    {
+                        targets: [11], // Action column
+                        render: function(data, type, row) {
+                            // هنا هيتطبع كل بيانات الصف
+
+                            const appointmentId = row[row.length - 1];
+                            return `
+                       <div class="action-buttons">
+                         ${data}
+                            <button type="button" class="btn btn-sm btn-primary btn-action" onclick="editAppointment('${appointmentId}')">
+                                <i class="fa fa-edit"></i> 
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger btn-action" onclick="deleteAppointment('${appointmentId}')">
+                                <i class="fa fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                        }
+                    }
+                ]
+            });
+
+            var acceptedTable = $("#acceptedAppointmentTable").DataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `${domainUrl}fetchAcceptedAppointmentsList`,
+                    type: "POST",
+                    error: function(error) {
+                        console.log('Accepted table error:', error);
+                    }
+                },
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        orderable: false,
+                    },
+                    {
+                        targets: [11], // Action column
+                        render: function(data, type, row) {
+                            const appointmentId = row[row.length - 1];
+                            return `
+                       <div class="action-buttons">
+                         ${data}
+                            <button type="button" class="btn btn-sm btn-primary btn-action" onclick="editAppointment('${appointmentId}')">
+                                <i class="fa fa-edit"></i> 
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger btn-action" onclick="deleteAppointment('${appointmentId}')">
+                                <i class="fa fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                        }
+                    }
+                ]
+            });
+
+            var completedTable = $("#completedAppointmentTable").DataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `${domainUrl}fetchCompletedAppointmentsList`,
+                    type: "POST",
+                    error: function(error) {
+                        console.log('Completed table error:', error);
+                    }
+                },
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        orderable: false,
+                    },
+                    {
+                        targets: [11], // Action column
+                        render: function(data, type, row) {
+                            const appointmentId = row[row.length - 1];
+                            return `
+                        <div class="action-buttons">
+                            ${data}
+                            <button type="button" class="btn btn-sm btn-primary btn-action" onclick="editAppointment('${appointmentId}')">
+                                <i class="fa fa-edit"></i> 
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger btn-action" onclick="deleteAppointment('${appointmentId}')">
+                                <i class="fa fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                        }
+                    }
+                ]
+            });
+
+            var cancelledTable = $("#cancelledAppointmentTable").DataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `${domainUrl}fetchCancelledAppointmentsList`,
+                    type: "POST",
+                    error: function(error) {
+                        console.log('Cancelled table error:', error);
+                    }
+                },
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        orderable: false,
+                    },
+                    {
+                        targets: [11], // Action column
+                        render: function(data, type, row) {
+                            const appointmentId = row[row.length - 1];
+                            return `
+                        <div class="action-buttons">
+                  ${data}
+                            <button type="button" class="btn btn-sm btn-primary btn-action" onclick="editAppointment('${appointmentId}')">
+                                <i class="fa fa-edit"></i> 
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger btn-action" onclick="deleteAppointment('${appointmentId}')">
+                                <i class="fa fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                        }
+                    }
+                ]
+            });
+
+            var declinedTable = $("#declinedAppointmentTable").DataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `${domainUrl}fetchDeclinedAppointmentsList`,
+                    type: "POST",
+                    error: function(error) {
+                        console.log('Declined table error:', error);
+                    }
+                },
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        orderable: false,
+                    },
+                    {
+                        targets: [11], // Action column
+                        render: function(data, type, row) {
+                            const appointmentId = row[row.length - 1];
+                            return `
+                        <div class="action-buttons">
+                        ${data}
+                            <button type="button" class="btn btn-sm btn-primary btn-action" onclick="editAppointment('${appointmentId}')">
+                                <i class="fa fa-edit"></i> 
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger btn-action" onclick="deleteAppointment('${appointmentId}')">
+                                <i class="fa fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                        }
+                    }
+                ]
+            });
+
+            // Add Appointment Form Handler - FIXED
+            $('#addAppointmentForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: `${domainUrl}AddAppointmentsForAdmin`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log('Add response:', response);
+                        if (response.status) {
+                            toastr.success(response.message ||
+                            'Appointment added successfully');
+                            $('#addAppointmentModal').modal('hide');
+                            $('#addAppointmentForm')[0].reset();
+
+                            // Force refresh all tables
+                            window.location.reload();
+                        } else {
+                            toastr.error(response.message || 'Error occurred');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.log('Add error:', xhr.responseText);
+                        toastr.error('Something went wrong!');
+                    }
+                });
+            });
+
+            // Calculate totals when amounts change
+            $('#service_amount, #discount_amount, #total_tax_amount').on('input', function() {
+                calculateTotals();
+            });
+
+            $('#edit_service_amount, #edit_discount_amount, #edit_total_tax_amount').on('input', function() {
+                calculateEditTotals();
+            });
+
+            // Show/Hide coupon title field
+            $('#is_coupon_applied').on('change', function() {
+                if ($(this).val() == '1') {
+                    $('#coupon_title_group').show();
+                    $('#coupon_title').attr('required', true);
+                } else {
+                    $('#coupon_title_group').hide();
+                    $('#coupon_title').attr('required', false);
+                }
+            });
+
+            $('#edit_is_coupon_applied').on('change', function() {
+                if ($(this).val() == '1') {
+                    $('#edit_coupon_title_group').show();
+                    $('#edit_coupon_title').attr('required', true);
+                } else {
+                    $('#edit_coupon_title_group').hide();
+                    $('#edit_coupon_title').attr('required', false);
+                }
+            });
+        });
+
+        // Calculate totals for add form
+        function calculateTotals() {
+            const serviceAmount = parseFloat($('#service_amount').val()) || 0;
+            const discountAmount = parseFloat($('#discount_amount').val()) || 0;
+            const taxAmount = parseFloat($('#total_tax_amount').val()) || 0;
+
+            const subtotal = serviceAmount - discountAmount;
+            const payableAmount = subtotal + taxAmount;
+
+            $('#subtotal').val(subtotal.toFixed(2));
+            $('#payable_amount').val(payableAmount.toFixed(2));
+        }
+
+        // Calculate totals for edit form
+        function calculateEditTotals() {
+            const serviceAmount = parseFloat($('#edit_service_amount').val()) || 0;
+            const discountAmount = parseFloat($('#edit_discount_amount').val()) || 0;
+            const taxAmount = parseFloat($('#edit_total_tax_amount').val()) || 0;
+
+            const subtotal = serviceAmount - discountAmount;
+            const payableAmount = subtotal + taxAmount;
+
+            $('#edit_subtotal').val(subtotal.toFixed(2));
+            $('#edit_payable_amount').val(payableAmount.toFixed(2));
+        }
+
+        // FIXED: Refresh all DataTables
+        function refreshAllTables() {
+            console.log('Refreshing all tables...');
+
+            try {
+                // Force reload each table
+                $('#allAppointmentTable').DataTable().ajax.reload(null, false);
+                $('#pendingAppointmentTable').DataTable().ajax.reload(null, false);
+                $('#acceptedAppointmentTable').DataTable().ajax.reload(null, false);
+                $('#completedAppointmentTable').DataTable().ajax.reload(null, false);
+                $('#cancelledAppointmentTable').DataTable().ajax.reload(null, false);
+                $('#declinedAppointmentTable').DataTable().ajax.reload(null, false);
+
+                console.log('All tables refreshed successfully');
+            } catch (error) {
+                console.log('Error refreshing tables:', error);
+                // Fallback: reload the page
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            }
+        }
+
+        // Placeholder functions for edit and delete
+        function editAppointment(appointmentId) {
+            console.log('Edit appointment:', appointmentId);
+            // Add your edit logic here
+        }
+
+        function deleteAppointment(appointmentId) {
+            console.log('Delete appointment:', appointmentId);
+            // Add your delete logic here
+        }
+
+
+
+        // Edit Appointment Function - UPDATED
+        function editAppointment(appointmentId) {
+            $.ajax({
+                url: `${domainUrl}getAppointmentForEdit/${appointmentId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.status) {
+                        const appointment = response.data;
+
+                        // Fill the edit form with appointment data
+                        $('#edit_appointment_id').val(appointment.id);
+                        $('#edit_user_id').val(appointment.user_id);
+                        $('#edit_doctor_id').val(appointment.doctor_id);
+                        $('#edit_date').val(appointment.date);
+                        $('#edit_time').val(appointment.time.replace(/(\d{2})(\d{2})/, '$1:$2')); // Format time
+                        $('#edit_type').val(appointment.type);
+                        $('#edit_session_type').val(appointment.session_type);
+                        $('#edit_problem').val(appointment.problem);
+                        $('#edit_service_amount').val(appointment.service_amount);
+                        $('#edit_discount_amount').val(appointment.discount_amount);
+                        $('#edit_total_tax_amount').val(appointment.total_tax_amount);
+                        $('#edit_subtotal').val(appointment.subtotal);
+                        $('#edit_payable_amount').val(appointment.payable_amount);
+                        $('#edit_status').val(appointment.status);
+                        $('#edit_is_urgent').val(appointment.is_urgent);
+                        $('#edit_is_coupon_applied').val(appointment.is_coupon_applied);
+
+                        if (appointment.is_coupon_applied == 1) {
+                            $('#edit_coupon_title_group').show();
+                            $('#edit_coupon_title').val(appointment.coupon_title);
+                        } else {
+                            $('#edit_coupon_title_group').hide();
+                        }
+
+                        $('#editAppointmentModal').modal('show');
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('Failed to fetch appointment data!');
+                    console.log(xhr.responseText);
+                }
+            });
+        }
+        $('#editAppointmentForm').on('submit', function(e) {
+            e.preventDefault();
+
+            var appointmentId = $('#edit_appointment_id').val();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: `${domainUrl}updateAppointmentForAdmin/${appointmentId}`,
+                type: 'POST', // خليه POST مش PUT
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.status) {
+                        toastr.success(response.message || 'Appointment updated successfully');
+                        $('#editAppointmentModal').modal('hide');
+                        window.location.reload();
+                    } else {
+                        toastr.error(response.message || 'Error occurred');
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('Something went wrong!');
+                    console.log(xhr.responseText);
+                }
+            });
+        });
+
+
+
+        // Edit Appointment Form Handler
+        $(document).on('submit', '#editAppointmentForm', function(e) {
+            e.preventDefault();
+
+            var appointmentId = $('#edit_appointment_id').val();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: `${domainUrl}updateAppointmentForAdmin/${appointmentId}`,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.status) {
+                        toastr.success(response.message || 'Appointment updated successfully');
+                        $('#editAppointmentModal').modal('hide');
+                        window.location.reload();
+                    } else {
+                        toastr.error(response.message || 'Error occurred');
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('Something went wrong!');
+                    console.log(xhr.responseText);
+                }
+            });
+        });
+
+        // إضافة هذه الكودات إلى ملف appointments.js الموجود
+
+        // Delete Appointment Function - NEW
+        function deleteAppointment(appointmentId) {
+            console.log('Delete appointment:', appointmentId);
+
+            // Set the appointment ID in the hidden field
+            $('#delete_appointment_id').val(appointmentId);
+
+            // Show the delete confirmation modal
+            $('#deleteAppointmentModal').modal('show');
+        }
+
+        // Delete Appointment Form Handler - NEW
+        $(document).on('submit', '#deleteAppointmentForm', function(e) {
+            e.preventDefault();
+
+            var appointmentId = $('#delete_appointment_id').val();
+
+            $.ajax({
+                url: `${domainUrl}deleteAppointmentForAdmin/${appointmentId}`,
+                type: 'DELETE',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    console.log('Delete response:', response);
+                    if (response.status) {
+                        toastr.success(response.message || 'Appointment deleted successfully');
+                        $('#deleteAppointmentModal').modal('hide');
+
+                        // Force refresh all tables
+                        window.location.reload();
+                    } else {
+                        toastr.error(response.message || 'Error occurred');
+                    }
+                },
+                error: function(xhr) {
+                    console.log('Delete error:', xhr.responseText);
+                    toastr.error('Something went wrong!');
+                }
+            });
+        });
+
+        // Alternative method using form action (if you prefer)
+        function deleteAppointmentAlternative(appointmentId) {
+            console.log('Delete appointment:', appointmentId);
+
+            // Set the form action URL
+            $('#deleteAppointmentForm').attr('action', `${domainUrl}deleteAppointmentForAdmin/${appointmentId}`);
+
+            // Set the appointment ID in the hidden field
+            $('#delete_appointment_id').val(appointmentId);
+
+            // Show the delete confirmation modal
+            $('#deleteAppointmentModal').modal('show');
+        }
+    </script>
+@endsection

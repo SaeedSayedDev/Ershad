@@ -1,6 +1,6 @@
 @extends('include.app')
 @section('header')
-    <script src="{{ asset('asset/script/notifications.js') }}"></script>
+    {{-- <script src="{{ asset('asset/script/notifications.js') }}"></script> --}}
 @endsection
 
 @section('content')
@@ -17,6 +17,25 @@
             width: 70% !important;
         }
     </style>
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="card mt-3">
         <div class="card-header">
             <h4>{{ __('Notifications') }}</h4>
@@ -26,6 +45,9 @@
 
             <a data-toggle="modal" data-target="#addDoctorNotiModal" href=""
                 class="ml-2 btn btn-primary text-white">{{ __('Notify Doctors') }}</a>
+
+            <a data-toggle="modal" data-target="#addUserAndDoctorNotiModal" href=""
+                class="ml-2 btn btn-primary text-white">{{ __('Notify Users & Doctors') }}</a>
         </div>
         <div class="card-body">
             <ul class="nav nav-pills border-b mb-3  ml-0">
@@ -92,9 +114,9 @@
                 </div>
                 <div class="modal-body">
 
-                    <form action="" method="post" enctype="multipart/form-data" id="editUserNotiForm"
-                        autocomplete="off">
+                    <form action="{{ route('editUserNotification') }}" method="post" autocomplete="off">
                         @csrf
+                        @method('PUT')
 
                         <input type="hidden" name="id" id="editUserNotiId">
 
@@ -131,8 +153,7 @@
                 </div>
                 <div class="modal-body">
 
-                    <form action="" method="post" enctype="multipart/form-data" id="addUserNotiForm"
-                        autocomplete="off">
+                    <form action="{{ route('addUserNotification') }}" method="post" autocomplete="off">
                         @csrf
 
                         <div class="form-group">
@@ -168,8 +189,44 @@
                 </div>
                 <div class="modal-body">
 
-                    <form action="" method="post" enctype="multipart/form-data" id="addDoctorNotiForm"
-                        autocomplete="off">
+                    <form action="{{ route('addDoctorNotification') }}" method="post" autocomplete="off">
+                        @csrf
+
+                        <div class="form-group">
+                            <label> {{ __('Title') }}</label>
+                            <input type="text" name="title" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label> {{ __('Description') }}</label>
+                            <textarea rows="10" style="height:200px !important;" type="text" name="description" class="form-control"
+                                required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <input class="btn btn-primary mr-1" type="submit" value=" {{ __('Submit') }}">
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- Add user & Doctor Noti Modal --}}
+    <div class="modal fade" id="addUserAndDoctorNotiModal" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>{{ __('Notify User & Doctors') }}</h5>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <form action="{{ route('addUserAndDoctorNotification') }}" method="post" autocomplete="off">
                         @csrf
 
                         <div class="form-group">
@@ -206,9 +263,9 @@
                 </div>
                 <div class="modal-body">
 
-                    <form action="" method="post" enctype="multipart/form-data" id="editDoctorNotiForm"
-                        autocomplete="off">
+                    <form action="{{ route('editDoctorNotification') }}" method="post" autocomplete="off">
                         @csrf
+                        @method('PUT')
 
                         <input type="hidden" name="id" id="editDoctorNotiId">
 
@@ -231,4 +288,162 @@
             </div>
         </div>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            $(".sideBarli").removeClass("activeLi");
+            $(".notificationsSideA").addClass("activeLi");
+
+            // Fetch Sound Categories
+            var url = `${domainUrl}getFaqCats`;
+            var faqCategories;
+            $.getJSON(url).done(function(data) {
+                faqCategories = data.data;
+            });
+
+            // DataTable للمستخدمين
+            $("#usersTable").dataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                serverMethod: "post",
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: [0, 1],
+                    orderable: false,
+                }, ],
+                ajax: {
+                    url: `${domainUrl}fetchUserNotificationList`,
+                    data: function(data) {},
+                    error: (error) => {
+                        console.log(error);
+                    },
+                },
+            });
+
+            // DataTable للأطباء
+            $("#doctorTable").dataTable({
+                dom: "Bfrtip",
+                buttons: ["copy", "csv", "excel", "pdf", "print"],
+                processing: true,
+                serverSide: true,
+                serverMethod: "post",
+                aaSorting: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: [0, 1],
+                    orderable: false,
+                }, ],
+                ajax: {
+                    url: `${domainUrl}fetchDoctorNotificationList`,
+                    data: function(data) {},
+                    error: (error) => {
+                        console.log(error);
+                    },
+                },
+            });
+
+            // حذف إشعار الأطباء
+            $("#doctorTable").on("click", ".delete", function(event) {
+                event.preventDefault();
+                swal({
+                    title: strings.doYouReallyWantToContinue,
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((isConfirm) => {
+                    if (isConfirm) {
+                        if (user_type == "1") {
+                            var id = $(this).attr("rel");
+                            var url = `${domainUrl}deleteDoctorNotification` + "/" + id;
+
+                            $.getJSON(url).done(function(data) {
+                                console.log(data);
+                                $("#doctorTable").DataTable().ajax.reload(null, false);
+                                iziToast.success({
+                                    title: strings.success,
+                                    message: strings.operationSuccessful,
+                                    position: "topRight",
+                                });
+                            });
+                        } else {
+                            iziToast.error({
+                                title: strings.error,
+                                message: strings.youAreTester,
+                                position: "topRight",
+                            });
+                        }
+                    }
+                });
+            });
+
+            // حذف إشعار المستخدمين
+            $("#usersTable").on("click", ".delete", function(event) {
+                event.preventDefault();
+                swal({
+                    title: strings.doYouReallyWantToContinue,
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((isConfirm) => {
+                    if (isConfirm) {
+                        if (user_type == "1") {
+                            var id = $(this).attr("rel");
+                            var url = `${domainUrl}deleteUserNotification` + "/" + id;
+
+                            $.getJSON(url).done(function(data) {
+                                console.log(data);
+                                $("#usersTable").DataTable().ajax.reload(null, false);
+                                iziToast.success({
+                                    title: strings.success,
+                                    message: strings.operationSuccessful,
+                                    position: "topRight",
+                                });
+                            });
+                        } else {
+                            iziToast.error({
+                                title: strings.error,
+                                message: strings.youAreTester,
+                                position: "topRight",
+                            });
+                        }
+                    }
+                });
+            });
+
+            // فتح modal تعديل إشعار الأطباء
+            $("#doctorTable").on("click", ".edit", function(event) {
+                event.preventDefault();
+
+                var title = $(this).data("title");
+                var description = $(this).data("description");
+                var id = $(this).attr("rel");
+
+                $("#editDoctorNotiId").val(id);
+                $("#editDoctorNotiTitle").val(title);
+                $("#editDoctorNotiDesc").val(description);
+
+                $("#editDoctorNotiModal").modal("show");
+            });
+
+            // فتح modal تعديل إشعار المستخدمين
+            $("#usersTable").on("click", ".edit", function(event) {
+                event.preventDefault();
+
+                var title = $(this).data("title");
+                var description = $(this).data("description");
+                var id = $(this).attr("rel");
+
+                $("#editUserNotiId").val(id);
+                $("#editUserNotiTitle").val(title);
+                $("#editUserNotiDesc").val(description);
+
+                $("#editUserNotiModal").modal("show");
+            });
+        });
+    </script>
 @endsection

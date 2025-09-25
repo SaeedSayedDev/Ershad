@@ -213,76 +213,139 @@ class SettingsController extends Controller
     {
         return view('doctorCategories');
     }
-    function editDoctorNotification(Request $request)
+    public function addUserNotification(Request $request)
     {
-        $item = DoctorNotifications::find($request->id);
-        $item->title = $request->title;
-        $item->description = $request->description;
-        $item->save();
-        return GlobalFunction::sendSimpleResponse(true, 'Notification edited successfully');
-    }
-    function editUserNotification(Request $request)
-    {
-        $item = UserNotification::find($request->id);
-        $item->title = $request->title;
-        $item->description = $request->description;
-        $item->save();
-        return GlobalFunction::sendSimpleResponse(true, 'User Notification edited successfully');
-    }
-    function addDoctorNotification(Request $request)
-    {
-        $item = new DoctorNotifications();
-        $item->title = $request->title;
-        $item->description = $request->description;
-        $item->save();
-        GlobalFunction::sendPushNotificationToDoctors($item->title, $item->description);
-        return GlobalFunction::sendSimpleResponse(true, 'Notification added successfully');
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string'
+            ]);
+
+            $item = new UserNotification();
+            $item->title = $request->title;
+            $item->description = $request->description;
+            $item->save();
+
+            GlobalFunction::sendPushNotificationToUsers($item->title, $item->description);
+
+            return redirect()->back()->with('success', 'تم إضافة الإشعار للمستخدمين بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة الإشعار');
+        }
     }
 
-    function addUserNotification(Request $request)
+    // إضافة إشعار للأطباء
+    public function addDoctorNotification(Request $request)
     {
-        $item = new UserNotification();
-        $item->title = $request->title;
-        $item->description = $request->description;
-        $item->save();
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string'
+            ]);
 
-        GlobalFunction::sendPushNotificationToUsers($item->title, $item->description);
-        
-        return response()->json(['status' => true, 'message' => 'User Notification added successfully']);
+            $item = new DoctorNotifications();
+            $item->title = $request->title;
+            $item->description = $request->description;
+            $item->save();
 
-        // return GlobalFunction::sendSimpleResponse(true, 'User Notification added successfully');
-    }
-    private function createNotification($model, $title, $description, $callback)
-    {
-        $item = new $model();
-        $item->title = $title;
-        $item->description = $description;
-        $item->save();
+            GlobalFunction::sendPushNotificationToDoctors($item->title, $item->description);
 
-        // استدعاء الفانكشن المسؤولة عن الـ Push
-        $callback($title, $description);
-
-        return $item;
+            return redirect()->back()->with('success', 'تم إضافة الإشعار للأطباء بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة الإشعار');
+        }
     }
 
-    function addDoctorAndUserNotification(Request $request)
+    // إضافة إشعار للمستخدمين والأطباء
+    public function addUserAndDoctorNotification(Request $request)
     {
-        $title = $request->title;
-        $description = $request->description;
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string'
+            ]);
 
-        $this->createNotification(UserNotification::class, $title, $description, function ($title, $description) {
-            GlobalFunction::sendPushNotificationToUsers($title, $description);
-        });
+            // إضافة إشعار للمستخدمين
+            $userItem = new UserNotification();
+            $userItem->title = $request->title;
+            $userItem->description = $request->description;
+            $userItem->save();
 
-        $this->createNotification(DoctorNotifications::class, $title, $description, function ($title, $description) {
-            GlobalFunction::sendPushNotificationToDoctors($title, $description);
-        });
+            // إضافة إشعار للأطباء
+            $doctorItem = new DoctorNotifications();
+            $doctorItem->title = $request->title;
+            $doctorItem->description = $request->description;
+            $doctorItem->save();
 
-        return GlobalFunction::sendSimpleResponse(true, 'Notification added successfully for both users and doctors');
+            // إرسال الإشعارات
+            GlobalFunction::sendPushNotificationToUsers($userItem->title, $userItem->description);
+            GlobalFunction::sendPushNotificationToDoctors($doctorItem->title, $doctorItem->description);
+
+            return redirect()->back()->with('success', 'تم إضافة الإشعار للمستخدمين والأطباء بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة الإشعار');
+        }
     }
 
+    // تعديل إشعار المستخدمين
+    public function editUserNotification(Request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required|exists:user_notifications,id',
+                'title' => 'required|string|max:255',
+                'description' => 'required|string'
+            ]);
+
+            $item = UserNotification::find($request->id);
+            $item->title = $request->title;
+            $item->description = $request->description;
+            $item->save();
+
+            return redirect()->back()->with('success', 'تم تعديل إشعار المستخدمين بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء تعديل الإشعار');
+        }
+    }
+
+    // تعديل إشعار الأطباء
+    public function editDoctorNotification(Request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required|exists:doctor_notifications,id',
+                'title' => 'required|string|max:255',
+                'description' => 'required|string'
+            ]);
+
+            $item = DoctorNotifications::find($request->id);
+            $item->title = $request->title;
+            $item->description = $request->description;
+            $item->save();
+
+            return redirect()->back()->with('success', 'تم تعديل إشعار الأطباء بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء تعديل الإشعار');
+        }
+    }
+
+    // function addUserAndDoctorNotification(Request $request)
+    // {
+    //     $item = new UserNotification();
+    //     $item->title = $request->title;
+    //     $item->description = $request->description;
+    //     $item->save();
+    //     GlobalFunction::sendPushNotificationToUsers($item->title, $item->description);
 
 
+    //     $item = new DoctorNotifications();
+    //     $item->title = $request->title;
+    //     $item->description = $request->description;
+    //     $item->save();
+    //     GlobalFunction::sendPushNotificationToDoctors($item->title, $item->description);
+
+    //     return GlobalFunction::sendSimpleResponse(true, 'User Notification added successfully');
+    // }
     function notifications()
     {
         return view('notifications');

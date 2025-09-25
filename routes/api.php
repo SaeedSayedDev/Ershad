@@ -168,15 +168,44 @@ Route::get('fetchAllJobTitles', [SettingsController::class, 'fetchAllJobTitles']
 
 
 
-Route::get('/test/firebase', function (Request $request) {
-    // dd('dd');
-    $firebase = new FirebaseService();
+// use Illuminate\Support\Faades\Log;
+// use Google\Client;
 
-    $response = $firebase->sendNotification(
-        'fjK98AtoQ0yf2MduCPMk8m:APA91bE9Si0B3N3SZbffbo_MOVwVuDvs_b8PTxzjF2113Lj4lgoW0gsC_U_W8-wy4YImh231bVYaQBCd4Rnm3nTW90qLY8_xIkc5z6WmYTl1t2SDTPiul6I',
-        'Hello Said  ',
-        'This is a test notification using FCM '
-    );
+// function getAccessToken()
+// {
+//     $client = new Client();
+//     $client->setAuthConfig(storage_path('app/firebase/service-account.json'));
+//     $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
+//     $token = $client->fetchAccessTokenWithAssertion();
+//     return $token['access_token'];
+// }
 
-    return $response;
-});
+// Route::get('/test/firebase', function (Request $request) {
+//     $accessToken = getAccessToken();
+
+//     $headers = [
+//         'Authorization: Bearer ' . $accessToken,
+//         'Content-Type: application/json'
+//     ];
+
+//     $body = [
+//         "message" => [
+//             "token" => "cTQ68WkJSeKfGKVajYQKap:APA91bEG1k3FPcUEFTQ_BOALeaIYy2c8gflSbit8wqM9Zp2lAL2yW44LYNqsjlmTclg_9GdsgupDR3wTvE7awNVB7a6tdL2RowhJmpQdHOXthB-FegnAU-U",
+//             "notification" => [
+//                 "title" => "Hello",
+//                 "body" => "This is a test"
+//             ]
+//         ]
+//     ];
+
+//     $ch = curl_init();
+//     curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/v1/projects/ershad-bba88/messages:send');
+//     curl_setopt($ch, CURLOPT_POST, true);
+//     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+//     $result = curl_exec($ch);
+//     curl_close($ch);
+
+//     dd($result);
+// });

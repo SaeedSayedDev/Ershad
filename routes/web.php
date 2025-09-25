@@ -199,7 +199,7 @@ Route::post('fetchDoctorNotificationList', [SettingsController::class, 'fetchDoc
 Route::get('deleteDoctorNotification/{id}', [SettingsController::class, 'deleteDoctorNotification'])->middleware(['checkLogin'])->name('deleteDoctorNotification');
 Route::post('editDoctorNotification', [SettingsController::class, 'editDoctorNotification'])->middleware(['checkLogin'])->name('editDoctorNotification');
 
-Route::post('addDoctorAndUserNotification', [SettingsController::class, 'addDoctorAndUserNotification'])->middleware(['checkLogin'])->name('addDoctorAndUserNotification');
+Route::post('addUserAndDoctorNotification', [SettingsController::class, 'addUserAndDoctorNotification'])->middleware(['checkLogin'])->name('addUserAndDoctorNotification');
 
 // AI
 Route::get('ai', [AiController::class, 'ai'])->middleware(['checkLogin'])->name('ai');

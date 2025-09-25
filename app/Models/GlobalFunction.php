@@ -18,165 +18,51 @@ class GlobalFunction extends Model
         return round($number, 2);
     }
 
-    public static function sendPushNotificationToUsers_2($title, $message)
+    function getAccessToken()
     {
-        $title = $title;
-        $descreption  = $message;
-        $url = 'https://fcm.googleapis.com/fcm/send';
-        // $url = 'https://fcm.googleapis.com/v1/projects/ershad-bba88/messages:send';
-        $api_key = env('FCM_TOKEN');
-
-        $notificationArray = array('title' => $title, 'body' => $descreption, 'sound' => 'default', 'image' => "", 'badge' => '1');
-
-        $fields = array(
-            'to' => '/topics/patient',
-            'notification' => $notificationArray,
-            'priority' => 'high'
-        );
-        $headers = array(
-            'Content-Type:application/json',
-            'Authorization:key=' . $api_key
-        );
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-        $result = curl_exec($ch);
-        if ($result === FALSE) {
-            die('FCM Send Error: ' . curl_error($ch));
-            Log::debug(curl_error($ch));
-        }
-        curl_close($ch);
-        if ($result) {
-            return json_encode(['status' => true, 'message' => 'Notification sent successfully']);
-        } else {
-            return json_encode(['status' => false, 'message ' => 'Not sent!']);
-        }
+        $client = new Client();
+        $client->setAuthConfig(storage_path('app/firebase/service-account.json'));
+        $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
+        $token = $client->fetchAccessTokenWithAssertion();
+        return $token['access_token'];
     }
     public static function sendPushNotificationToUsers($title, $message)
     {
-        $deviceTokens = User::pluck('device_token');
-        
-        $results = [];
-        $success = 0;
-        $failure = 0;
+        // Project ID بتاعك من Firebase Console
+        $projectId = 'ershad-bba88'; // غيره للي عندك
+        $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
-        $client = new \Google_Client();
-        $client->setAuthConfig(storage_path('app/firebase/service-account.json'));
-        $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
+        // هات الـ Access Token من service account
+        $accessToken = (new self)->getAccessToken();
 
-        $accessToken = $client->fetchAccessTokenWithAssertion()["access_token"];
-        $url = "https://fcm.googleapis.com/v1/projects/" . env('FIREBASE_PROJECT_ID') . "/messages:send";
+        // هات كل التوكينات من الجدول
+        $tokens = User::pluck('device_token')->toArray();
 
         $headers = [
-            "Authorization: Bearer {$accessToken}",
-            "Content-Type: application/json",
+            'Authorization: Bearer ' . $accessToken,
+            'Content-Type: application/json',
         ];
 
-        foreach ($deviceTokens as $token) {
-            try {
-                $messageData = [
-                    "message" => [
-                        "token" => $token,
-                        "notification" => [
-                            "title" => $title,
-                            "body"  => $message,
-                        ],
-                        "android" => ["priority" => "high"],
-                        "apns" => [
-                            "payload" => [
-                                "aps" => [
-                                    "sound" => "default",
-                                    "badge" => 1,
-                                ]
-                            ]
-                        ]
-                    ]
-                ];
-
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($messageData));
-
-                $result = curl_exec($ch);
-
-                if ($result === FALSE) {
-                    $error = curl_error($ch);
-                    $failure++;
-                    $results[] = ["error" => $error];
-                } else {
-                    $decoded = json_decode($result, true);
-                    $success++;
-                    $results[] = ["message_id" => $decoded['name'] ?? null];
-                }
-
-                curl_close($ch);
-            } catch (\Exception $e) {
-                $failure++;
-                $results[] = ["error" => $e->getMessage()];
-            }
-        }
-
-        // 6️⃣ إعادة نفس شكل response القديم
-        return response()->json([
-            "multicast_id"  => rand(100000, 999999),
-            "success"       => $success,
-            "failure"       => $failure,
-            "canonical_ids" => 0,
-            "results"       => $results
-        ]);
-    }
-
-
-
-    public static function sendPushNotificationToDoctors($title, $message)
-    {
-        $projectId = env('FIREBASE_PROJECT_ID'); // اضف الـ project id بتاعك من Firebase
-        $topic = "doctor";
-
-        try {
-            // تحميل الـ service account key
-            $client = new Client();
-            $client->setAuthConfig(storage_path('app/firebase/service-account.json'));
-            $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
-
-            // جلب access token
-            $accessToken = $client->fetchAccessTokenWithAssertion()["access_token"];
-
-            $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
-
-            // الـ notification body
-            $messageData = [
-                "message" => [
-                    "topic" => $topic,
-                    "notification" => [
-                        "title" => $title,
-                        "body" => $message,
+        foreach ($tokens as $token) {
+            $fields = [
+                'message' => [
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $title,
+                        'body'  => $message,
                     ],
-                    "android" => [
-                        "priority" => "high",
+                    'android' => [
+                        'priority' => 'high'
                     ],
-                    "apns" => [
-                        "payload" => [
-                            "aps" => [
-                                "sound" => "default",
-                                "badge" => 1,
+                    'apns' => [
+                        'payload' => [
+                            'aps' => [
+                                'sound' => 'default',
+                                'badge' => 1,
                             ]
                         ]
                     ]
                 ]
-            ];
-
-            $headers = [
-                "Authorization: Bearer {$accessToken}",
-                "Content-Type: application/json",
             ];
 
             $ch = curl_init();
@@ -184,21 +70,90 @@ class GlobalFunction extends Model
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($messageData));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
 
             $result = curl_exec($ch);
+
             if ($result === FALSE) {
-                Log::error('FCM Send Error: ' . curl_error($ch));
-                return response()->json(['status' => false, 'message' => 'Not sent!']);
+                \Log::error('FCM v1 Send Error: ' . curl_error($ch));
+            } else {
+                \Log::info('FCM v1 Response: ' . $result);
             }
 
             curl_close($ch);
-
-            return response()->json(['status' => true, 'message' => 'Notification sent successfully', 'response' => json_decode($result, true)]);
-        } catch (\Exception $e) {
-            Log::error('FCM Exception: ' . $e->getMessage());
-            return response()->json(['status' => false, 'message' => $e->getMessage()]);
         }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Notifications sent successfully (FCM v1)'
+        ]);
+    }
+
+
+    public static function sendPushNotificationToDoctors($title, $message)
+    {   // Project ID بتاعك من Firebase Console
+        $projectId = 'ershad-bba88'; // غيره للي عندك
+        $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+
+        // هات الـ Access Token من service account
+        $accessToken = (new self)->getAccessToken();
+
+        // هات كل التوكينات من الجدول
+        $tokens = Doctors::pluck('device_token')->toArray();
+
+        $headers = [
+            'Authorization: Bearer ' . $accessToken,
+            'Content-Type: application/json',
+        ];
+
+        foreach ($tokens as $token) {
+            $fields = [
+                'message' => [
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $title,
+                        'body'  => $message,
+                    ],
+                    'android' => [
+                        'priority' => 'high'
+                    ],
+                    'apns' => [
+                        'payload' => [
+                            'aps' => [
+                                'sound' => 'default',
+                                'badge' => 1,
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+
+            $result = curl_exec($ch);
+
+            if ($result === FALSE) {
+                \Log::error('FCM v1 Send Error: ' . curl_error($ch));
+            } else {
+                \Log::info('FCM v1 Response: ' . $result);
+            }
+
+            curl_close($ch);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Notifications sent successfully (FCM v1)'
+        ]);
     }
 
 

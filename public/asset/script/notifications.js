@@ -9,6 +9,7 @@ $(document).ready(function () {
         faqCategories = data.data;
     });
 
+    // DataTable للمستخدمين
     $("#usersTable").dataTable({
         dom: "Bfrtip",
         buttons: ["copy", "csv", "excel", "pdf", "print"],
@@ -24,13 +25,14 @@ $(document).ready(function () {
         ],
         ajax: {
             url: `${domainUrl}fetchUserNotificationList`,
-            data: function (data) {},
+            data: function (data) { },
             error: (error) => {
                 console.log(error);
             },
         },
     });
 
+    // DataTable للأطباء
     $("#doctorTable").dataTable({
         dom: "Bfrtip",
         buttons: ["copy", "csv", "excel", "pdf", "print"],
@@ -46,13 +48,14 @@ $(document).ready(function () {
         ],
         ajax: {
             url: `${domainUrl}fetchDoctorNotificationList`,
-            data: function (data) {},
+            data: function (data) { },
             error: (error) => {
                 console.log(error);
             },
         },
     });
 
+    // حذف إشعار الأطباء
     $("#doctorTable").on("click", ".delete", function (event) {
         event.preventDefault();
         swal({
@@ -85,6 +88,8 @@ $(document).ready(function () {
             }
         });
     });
+
+    // حذف إشعار المستخدمين
     $("#usersTable").on("click", ".delete", function (event) {
         event.preventDefault();
         swal({
@@ -117,6 +122,8 @@ $(document).ready(function () {
             }
         });
     });
+
+    // فتح modal تعديل إشعار الأطباء
     $("#doctorTable").on("click", ".edit", function (event) {
         event.preventDefault();
 
@@ -130,6 +137,8 @@ $(document).ready(function () {
 
         $("#editDoctorNotiModal").modal("show");
     });
+
+    // فتح modal تعديل إشعار المستخدمين
     $("#usersTable").on("click", ".edit", function (event) {
         event.preventDefault();
 
@@ -142,157 +151,5 @@ $(document).ready(function () {
         $("#editUserNotiDesc").val(description);
 
         $("#editUserNotiModal").modal("show");
-    });
-    $("#addDoctorNotiForm").on("submit", function (event) {
-        event.preventDefault();
-        $(".loader").show();
-        if (user_type == "1") {
-            var formdata = new FormData($("#addDoctorNotiForm")[0]);
-            $.ajax({
-                url: `${domainUrl}addDoctorNotification`,
-                type: "POST",
-                data: formdata,
-                dataType: "json",
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (response) {
-                    $(".loader").hide();
-                    $("#addDoctorNotiModal").modal("hide");
-                    $("#addDoctorNotiForm").trigger("reset");
-                    $("#doctorTable").DataTable().ajax.reload(null, false);
-                    iziToast.success({
-                        title: strings.success,
-                        message: strings.operationSuccessful,
-                        position: "topRight",
-                    });
-                },
-                error: (error) => {
-                    $(".loader").hide();
-                    console.log(JSON.stringify(error));
-                },
-            });
-        } else {
-            $(".loader").hide();
-            iziToast.error({
-                title: strings.error,
-                message: strings.youAreTester,
-                position: "topRight",
-            });
-        }
-    });
-    $("#addUserNotiForm").on("submit", function (event) {
-        event.preventDefault();
-        $(".loader").show();
-        if (user_type == "1") {
-            var formdata = new FormData($("#addUserNotiForm")[0]);
-            $.ajax({
-                url: `${domainUrl}addUserNotification`,
-                type: "POST",
-                data: formdata,
-                dataType: "json",
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (response) {
-                    $(".loader").hide();
-                    $("#addUserNotiModal").modal("hide");
-                    $("#addUserNotiForm").trigger("reset");
-                    $("#usersTable").DataTable().ajax.reload(null, false);
-                    iziToast.success({
-                        title: strings.success,
-                        message: strings.operationSuccessful,
-                        position: "topRight",
-                    });
-                },
-                error: (error) => {
-                    $(".loader").hide();
-                    console.log(JSON.stringify(error));
-                },
-            });
-        } else {
-            $(".loader").hide();
-            iziToast.error({
-                title: strings.error,
-                message: strings.youAreTester,
-                position: "topRight",
-            });
-        }
-    });
-    $("#editUserNotiForm").on("submit", function (event) {
-        event.preventDefault();
-        $(".loader").show();
-        if (user_type == "1") {
-            var formdata = new FormData($("#editUserNotiForm")[0]);
-            $.ajax({
-                url: `${domainUrl}editUserNotification`,
-                type: "POST",
-                data: formdata,
-                dataType: "json",
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (response) {
-                    $(".loader").hide();
-                    $("#editUserNotiModal").modal("hide");
-                    $("#editUserNotiForm").trigger("reset");
-                    $("#usersTable").DataTable().ajax.reload(null, false);
-                    iziToast.success({
-                        title: strings.success,
-                        message: strings.operationSuccessful,
-                        position: "topRight",
-                    });
-                },
-                error: (error) => {
-                    $(".loader").hide();
-                    console.log(JSON.stringify(error));
-                },
-            });
-        } else {
-            $(".loader").hide();
-            iziToast.error({
-                title: strings.error,
-                message: strings.youAreTester,
-                position: "topRight",
-            });
-        }
-    });
-    $("#editDoctorNotiForm").on("submit", function (event) {
-        event.preventDefault();
-        $(".loader").show();
-        if (user_type == "1") {
-            var formdata = new FormData($("#editDoctorNotiForm")[0]);
-            $.ajax({
-                url: `${domainUrl}editDoctorNotification`,
-                type: "POST",
-                data: formdata,
-                dataType: "json",
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (response) {
-                    $(".loader").hide();
-                    $("#editDoctorNotiModal").modal("hide");
-                    $("#editDoctorNotiForm").trigger("reset");
-                    $("#doctorTable").DataTable().ajax.reload(null, false);
-                    iziToast.success({
-                        title: strings.success,
-                        message: strings.operationSuccessful,
-                        position: "topRight",
-                    });
-                },
-                error: (error) => {
-                    $(".loader").hide();
-                    console.log(JSON.stringify(error));
-                },
-            });
-        } else {
-            $(".loader").hide();
-            iziToast.error({
-                title: strings.error,
-                message: strings.youAreTester,
-                position: "topRight",
-            });
-        }
     });
 });

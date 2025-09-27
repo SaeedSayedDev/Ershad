@@ -42,7 +42,22 @@
 
         </div>
     </div>
-
+    <div class="card">
+        <div class="card-header">
+            <h5>{{ __('Interests') }}</h5>
+        </div>
+        <div class="card-body">
+            @if ($user->interests->count() > 0)
+                <ul>
+                    @foreach ($user->interests as $userInterest)
+                        <li>{{ $userInterest->interest->name }}</li>
+                    @endforeach
+                </ul>
+            @else
+                <p>{{ __('No interests added') }}</p>
+            @endif
+        </div>
+    </div>
     <div class="card">
         <div class="card-header">
             <ul class="nav nav-pills border-b  ml-0">
@@ -174,6 +189,9 @@
                 </div>
             </div>
         </div>
+
+
+
     </div>
 
     {{-- Reject Modal --}}

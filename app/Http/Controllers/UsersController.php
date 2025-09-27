@@ -17,6 +17,7 @@ use App\Models\UserWalletRechargeLogs;
 use App\Models\UserWalletStatements;
 use App\Models\UserWithdrawRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
@@ -111,7 +112,7 @@ class UsersController extends Controller
     }
     function viewUserProfile($id)
     {
-        $user = Users::find($id);
+        $user = Users::with('interests.interest')->find($id);
         $settings = GlobalSettings::first();
         $totalAppointments = Appointments::where('user_id', $id)->count();
         return view('viewUserProfile', [
@@ -119,6 +120,7 @@ class UsersController extends Controller
             'settings' => $settings,
             'totalAppointments' => $totalAppointments,
         ]);
+
     }
 
     function blockUserFromAdmin($id)
@@ -1361,6 +1363,45 @@ class UsersController extends Controller
 
         return GlobalFunction::sendSimpleResponse(true, 'user data deleted successfully');
     }
+
+
+    public function addUserInterest(Request $request)
+    {
+        $rules = [
+            'user_id' => 'required|exists:users,id',
+            'interest_id' => 'required|array',
+            'interest_id.*' => 'exists:interests,id', // نتأكد إن كل interest_id موجود
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $messages = $validator->errors()->all();
+            $msg = $messages[0];
+            return response()->json(['status' => false, 'message' => $msg]);
+        }
+
+        $userId = $request->user_id;
+        $interestIds = $request->interest_id; // دي Array
+
+        // نمسح القديم (لو عايز تستبدل الاهتمامات مش تضيف فوقهم)
+        DB::table('user_interests')->where('user_id', $userId)->delete();
+
+        // نجهز البيانات للإدخال مرة واحدة
+        $insertData = [];
+        foreach ($interestIds as $id) {
+            $insertData[] = [
+                'user_id' => $userId,
+                'interest_id' => $id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        DB::table('user_interests')->insert($insertData);
+
+        return GlobalFunction::sendSimpleResponse(true, 'Interests added successfully');
+    }
+
     function updateUserDetails(Request $request)
     {
         $rules = [
@@ -1592,7 +1633,7 @@ class UsersController extends Controller
 
             return GlobalFunction::sendDataResponse(true, 'User registration successful', $user);
         }
-        
+
         $user->device_type = $request->device_type;
         $user->device_token = $request->device_token;
         $user->login_type = 3;

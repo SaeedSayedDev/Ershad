@@ -19,4 +19,8 @@ class Users extends Model
     {
         return Carbon::parse($this->attributes['dob'])->age;
     }
+    public function interests()
+    {
+        return $this->hasMany(UserInterest::class, 'user_id', 'id');
+    }
 }

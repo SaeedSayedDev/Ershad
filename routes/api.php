@@ -36,6 +36,7 @@ Route::prefix('user')->group(function () {
     Route::post('registerUser', [UsersController::class, 'registerUser'])->middleware('checkHeader');
     Route::post('updateUserDetails', [UsersController::class, 'updateUserDetails'])->middleware('checkHeader');
     Route::post('deleteUserAccount', [UsersController::class, 'deleteUserAccount'])->middleware('checkHeader');
+    Route::post('addUserInterest', [UsersController::class, 'addUserInterest'])->middleware('checkHeader');
     Route::post('fetchMyUserDetails', [UsersController::class, 'fetchMyUserDetails'])->middleware('checkHeader');
     Route::post('addPatient', [UsersController::class, 'addPatient'])->middleware('checkHeader');
     Route::post('editPatient', [UsersController::class, 'editPatient'])->middleware('checkHeader');

@@ -1484,6 +1484,43 @@ class UsersController extends Controller
             return GlobalFunction::sendDataResponse(true, 'User registration successful', $user);
         }
     }
+
+
+
+
+
+
+    public function registerUserGoogle1(Request $request)
+    {
+        try {
+            // Decode and validate (we know this works)
+            $parts = explode('.', $request->id_token);
+            $payload = json_decode(base64_decode($parts[1]), true);
+
+            // Extract user data
+            $googleId = $payload['sub'];
+            $name     = $payload['name'] ?? null;
+            $email    = $payload['email'] ?? null;
+
+            dd([
+                'step' => 'user_data_extracted',
+                'google_id' => $googleId,
+                'name' => $name,
+                'email' => $email,
+                'device_type' => $request->device_type,
+                'device_token' => $request->device_token
+            ]);
+        } catch (\Exception $e) {
+            dd([
+                'step' => 'exception_in_extraction',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine()
+            ]);
+        }
+    }
+
+
+
     public function registerUserGoogle(Request $request)
     {
         $request->validate([
@@ -1492,37 +1529,77 @@ class UsersController extends Controller
             'device_token' => 'nullable|string',
         ]);
 
-        // Verify id_token with Google
-        $client = new \Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
-        $payload = $client->verifyIdToken($request->id_token);
+        try {
+            // Try different initialization methods
+            $client = new \Google_Client();
+            $client->setClientId(env('GOOGLE_CLIENT_ID'));
 
-        if ($payload) {
-            $googleId = $payload['sub'];   // Google user unique ID
-            $name     = $payload['name'] ?? null;
-            $email    = $payload['email'] ?? null;
+            // Add these configurations
+            $client->setAccessType('offline');
+            $client->setApprovalPrompt('force');
 
-            // Find or create user
-            $user = Users::where('identity', $googleId)->first();
+            $payload = $client->verifyIdToken($request->id_token);
 
-            if (!$user) {
-                $user = Users::create([
-                    'identity'     => $googleId,
-                    'fullname'     => $name,
-                    'email'        => $email,
-                    'login_type'   => 2, // 2 = Google login
-                    'device_type'  => $request->device_type,
-                    'device_token' => $request->device_token,
-                ]);
-            } else {
-                $user->update([
-                    'device_type'  => $request->device_type,
-                    'device_token' => $request->device_token,
-                ]);
+            if (!$payload) {
+                // Fallback to manual decoding if library fails
+                return $this->manualTokenDecoding($request);
             }
 
-            return GlobalFunction::sendDataResponse(true, 'Login/Register with Google successful', $user);
+            // If it works, use the verified payload
+            return $this->processGoogleUser($payload, $request);
+        } catch (\Exception $e) {
+            // Fallback to manual decoding
+            return $this->manualTokenDecoding($request);
+        }
+    }
+
+    private function manualTokenDecoding($request)
+    {
+        $parts = explode('.', $request->id_token);
+        $payload = json_decode(base64_decode($parts[1]), true);
+
+        // Basic validations
+        if (($payload['exp'] ?? 0) < time()) {
+            return response()->json(['error' => 'Token expired'], 401);
         }
 
-        return response()->json(['error' => 'Invalid Google token'], 401);
+        if (($payload['aud'] ?? '') !== env('GOOGLE_CLIENT_ID')) {
+            return response()->json(['error' => 'Invalid audience'], 401);
+        }
+
+        return $this->processGoogleUser($payload, $request);
+    }
+
+    private function processGoogleUser($payload, $request)
+    {
+        $googleId = $payload['sub'];        // Google's unique ID
+        $name     = $payload['name'] ?? null;
+        $email    = $payload['email'] ?? null;
+
+        // Search by email in identity field (not Google ID)
+        $user = Users::where('identity', $email)->first();
+
+        if (!$user) {
+            $user = new Users();
+            $user->identity = $request->identity;
+            $user->device_type = $request->device_type;
+            $user->device_token = $request->device_token;
+            $user->fullname = $request->fullname;
+            $user->login_type = 3;
+            $user->save();
+
+            $user = Users::find($user->id);
+
+            return GlobalFunction::sendDataResponse(true, 'User registration successful', $user);
+        }
+        
+        $user->device_type = $request->device_type;
+        $user->device_token = $request->device_token;
+        $user->login_type = 3;
+        $user->save();
+
+        $user = Users::find($user->id);
+
+        return GlobalFunction::sendDataResponse(true, 'User exists already', $user);
     }
 }

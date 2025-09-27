@@ -10,9 +10,20 @@ class Doctors extends Model
     use HasFactory;
     public $table = "doctors";
 
-    public function category()
+    // public function category()
+    // {
+    //     return $this->hasOne(DoctorCategories::class, 'id', 'category_id');
+    // }
+
+    protected $casts = [
+        'category_id' => 'array', // مهم علشان يفك JSON أوتوماتيك
+    ];
+
+    // Accessor يرجع الكاتيجوريز
+    public function getCategoriesDataAttribute()
     {
-        return $this->hasOne(DoctorCategories::class, 'id', 'category_id');
+        $ids = $this->category_id ?? [];
+        return DoctorCategories::whereIn('id', $ids)->get();
     }
     public function bankAccount()
     {

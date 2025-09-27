@@ -31,7 +31,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //******************/ Users
 Route::prefix('user')->group(function () {
     // Common
-    Route::post('user/register/google', [UsersController::class, 'registerUserGoogle']);
+    Route::post('/register/google', [UsersController::class, 'registerUserGoogle']);
 
     Route::post('registerUser', [UsersController::class, 'registerUser'])->middleware('checkHeader');
     Route::post('updateUserDetails', [UsersController::class, 'updateUserDetails'])->middleware('checkHeader');

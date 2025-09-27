@@ -54,10 +54,19 @@
                         <span class="badge bg-info text-white ">{{ __('Female') }}</span>
                     @endif
                 </div>
+
                 <div class="col-md-2">
-                    <label class="mb-0 text-grey d-block" for="">{{ __('Category') }}</label>
-                    <span class="badge bg-primary text-white mr-2">{{ $doctor->category?->title }}</span>
+                    <label class="mb-0 text-grey d-block">{{ __('Category') }}</label>
+
+                    @if (!empty($doctor->categories) && count($doctor->categories) > 0)
+                        @foreach ($doctor->categories as $cat)
+                            <span class="badge bg-primary text-white m-1">{{ $cat->title }}</span>
+                        @endforeach
+                    @else
+                        <span class="badge bg-secondary text-white">{{ __('No Category') }}</span>
+                    @endif
                 </div>
+
 
                 {{-- Online consultation --}}
                 <div class="col-md-2">
@@ -202,7 +211,7 @@
                         data-toggle="tab">{{ __('Slots') }}
                         <span class="badge badge-transparent "></span></a>
                 </li>
-                 <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#AddSlot" role="AddSlot"
+                <li role="presentation" class="nav-item"><a class="nav-link pointer" href="#AddSlot" role="AddSlot"
                         data-toggle="tab">{{ __('Add Slots') }}
                         <span class="badge badge-transparent "></span></a>
                 </li>
@@ -232,15 +241,14 @@
                         @csrf
 
                         <input type="hidden" name="id" value="{{ $doctor->id }}">
-                         <div class="form-row ">
+                        <div class="form-row ">
                             <div class="form-group col-md-3">
                                 <label for="">{{ __('image') }}</label>
                                 <input type="file" class="form-control" name="file">
                             </div>
-                             <div class="form-group col-md-3">
+                            <div class="form-group col-md-3">
                                 <label for="">{{ __('name') }}</label>
-                                <input type="text" class="form-control" name="name"
-                                    value="{{ $doctor->name }}">
+                                <input type="text" class="form-control" name="name" value="{{ $doctor->name }}">
                             </div>
                         </div>
                         <div class="form-row ">
@@ -274,8 +282,8 @@
                         <div class="form-row ">
                             <div class="form-group col-md-4">
                                 <label for="">{{ __('Degrees') }}</label>
-                                
-                                
+
+
                                 <textarea style="height:100px !important;" type="text" class="form-control" name="degrees">{{ $doctor->degrees }}</textarea>
                             </div>
                             <div class="form-group col-md-4">
@@ -491,7 +499,7 @@
                 </div>
                 {{-- Slots --}}
                 <div role="tabpanel" class="tab-pane" id="tabSlots">
-                  
+
                     <div class="table-responsive col-12">
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Monday') }}</label>
@@ -539,45 +547,44 @@
                 </div>
 
                 <div role="tabpanel" class="tab-pane" id="AddSlot">
-                    
+
                     <div class="table-responsive col-12">
-                      <form action="" method="post" enctype="multipart/form-data" class=""
-                        id="addSlotForm" autocomplete="off">
-                        @csrf
+                        <form action="" method="post" enctype="multipart/form-data" class=""
+                            id="addSlotForm" autocomplete="off">
+                            @csrf
 
-                        <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
-                         
-                        <div class="form-row ">
-                            <div class="form-group col-md-3">
-                                <label for="">{{ __('time') }}</label>
-                                <input type="time" class="form-control" name="time"
-                                    >
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="">{{ __('weekday') }}</label>
-                                <select class="form-control" name='weekday'>
-                                    <option value='1'>Monday</option>
-                                    <option value='2'>Tuesday</option>
-                                    <option value='3'>Wednesday</option>
-                                    <option value='4'>Thursday</option>
-                                    <option value='5'>Friday</option>
-                                    <option value='6'>Saturday</option>
-                                    <option value='7'>Sunday</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="">{{ __('booking limit') }}</label>
-                                <input type="number" class="form-control" name="booking_limit"
-                                    >
-                            </div>
-                          
+                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
 
-                        <div class="form-group col-md-3">
-                            <label for=""></label>
-                            <input class="btn btn-primary mr-1"style="display: block; margin-top: 12px;" type="submit" value=" {{ __('Submit') }}">
-                        </div>
+                            <div class="form-row ">
+                                <div class="form-group col-md-3">
+                                    <label for="">{{ __('time') }}</label>
+                                    <input type="time" class="form-control" name="time">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="">{{ __('weekday') }}</label>
+                                    <select class="form-control" name='weekday'>
+                                        <option value='1'>Monday</option>
+                                        <option value='2'>Tuesday</option>
+                                        <option value='3'>Wednesday</option>
+                                        <option value='4'>Thursday</option>
+                                        <option value='5'>Friday</option>
+                                        <option value='6'>Saturday</option>
+                                        <option value='7'>Sunday</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="">{{ __('booking limit') }}</label>
+                                    <input type="number" class="form-control" name="booking_limit">
+                                </div>
 
-                    </form>
+
+                                <div class="form-group col-md-3">
+                                    <label for=""></label>
+                                    <input class="btn btn-primary mr-1"style="display: block; margin-top: 12px;"
+                                        type="submit" value=" {{ __('Submit') }}">
+                                </div>
+
+                        </form>
                     </div>
                 </div>
             </div>

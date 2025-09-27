@@ -10,12 +10,12 @@
             <a data-toggle="modal" data-target="#addDoctorsModal" href=""
                 class="ml-auto btn btn-primary text-white">{{ __('Add Doctor') }}</a>
         </div>
-         
+
         <div class="card-body">
             <ul class="nav nav-pills border-b mb-3  ml-0">
 
-                <li role="presentation" class="nav-item"><a class="nav-link pointer active" href="#Section1" aria-controls="home"
-                        role="tab" data-toggle="tab">{{ __('All Doctors') }}<span
+                <li role="presentation" class="nav-item"><a class="nav-link pointer active" href="#Section1"
+                        aria-controls="home" role="tab" data-toggle="tab">{{ __('All Doctors') }}<span
                             class="badge badge-transparent "></span></a>
                 </li>
 
@@ -154,7 +154,8 @@
                 </div>
                 <div class="modal-body">
 
-                    <form action="" method="post" enctype="multipart/form-data" id="addDoctorsForm" autocomplete="off">
+                    <form action="" method="post" enctype="multipart/form-data" id="addDoctorsForm"
+                        autocomplete="off">
                         @csrf
 
                         <div class="form-group">
@@ -166,14 +167,15 @@
                             <input type="email" name="identity" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            
                             <label> {{ __('Category') }}</label>
-                            <select name="category_id" class="form-control" required>
-                                @foreach($category as $cat)
-                                <option value="{{$cat->id}}">{{$cat->title}}</option>
+                            <select name="category_id[]" class="form-control" multiple required>
+                                @foreach ($category as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->title }}</option>
                                 @endforeach
                             </select>
+                            <small class="text-muted">اضغط Ctrl أو ⌘ لاختيار أكثر من تصنيف</small>
                         </div>
+
                         <div class="form-group">
                             <input class="btn btn-primary mr-1" type="submit" value=" {{ __('Submit') }}">
                         </div>

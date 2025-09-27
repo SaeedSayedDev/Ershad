@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Str;
 use App\Models\Appointments;
 use App\Models\Constants;
@@ -30,6 +31,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use DB;
+
 class DoctorController extends Controller
 {
     function availableDoctorsNow()
@@ -64,51 +66,51 @@ class DoctorController extends Controller
 
     function availableDoctorsByDay(Request $request)
     {
-      
-        $doctor_id=$request->doctor_id;
+
+        $doctor_id = $request->doctor_id;
         $startDate = $request->startdate;
         $endDate = $request->enddate;
-        $avilabledate=[];
-        while($startDate<=$endDate){
-            $currentDate=date_create($startDate);
-        //  dd(date_format($currentDate,"w"));
-        if(date_format($currentDate,"w")==0){
-            $weekday=7;
-        }else{
-            $weekday=date_format($currentDate,"w");
-        }
-        $scopeAvailableSlot = function ($query) use ($currentDate,$doctor_id,$weekday) {
-            $query->where("booking_limit", ">", 0)
-                ->where("weekday", $weekday)
-                ->where("doctor_id", $doctor_id);
-        };
-        //  dd($scopeAvailableSlot);
-        $scopeAvailableAppointment = function ($query) use ($currentDate,$doctor_id) {
-            $query->where("status", Constants::orderAccepted)
-                ->where("date", $currentDate)
-                ->where("doctor_id", $doctor_id);
-        };
-DB::enableQueryLog();
-        $doctors = Doctors::where("on_vacation", 0)
-            ->where("status", Constants::statusDoctorApproved)
-            ->where("id", $doctor_id)
-            ->with(['slots' => $scopeAvailableSlot])
-            ->whereHas("slots", $scopeAvailableSlot)
-            ->whereDoesntHave("appointments", $scopeAvailableAppointment)
-            ->get();
+        $avilabledate = [];
+        while ($startDate <= $endDate) {
+            $currentDate = date_create($startDate);
+            //  dd(date_format($currentDate,"w"));
+            if (date_format($currentDate, "w") == 0) {
+                $weekday = 7;
+            } else {
+                $weekday = date_format($currentDate, "w");
+            }
+            $scopeAvailableSlot = function ($query) use ($currentDate, $doctor_id, $weekday) {
+                $query->where("booking_limit", ">", 0)
+                    ->where("weekday", $weekday)
+                    ->where("doctor_id", $doctor_id);
+            };
+            //  dd($scopeAvailableSlot);
+            $scopeAvailableAppointment = function ($query) use ($currentDate, $doctor_id) {
+                $query->where("status", Constants::orderAccepted)
+                    ->where("date", $currentDate)
+                    ->where("doctor_id", $doctor_id);
+            };
+            DB::enableQueryLog();
+            $doctors = Doctors::where("on_vacation", 0)
+                ->where("status", Constants::statusDoctorApproved)
+                ->where("id", $doctor_id)
+                ->with(['slots' => $scopeAvailableSlot])
+                ->whereHas("slots", $scopeAvailableSlot)
+                ->whereDoesntHave("appointments", $scopeAvailableAppointment)
+                ->get();
             $query = DB::getQueryLog();
 
-  
 
-        $query = end($query);
 
-  
+            $query = end($query);
 
-        // dd($query);
-            if(count($doctors)>0){
-                $avilabledate[]=$startDate;
+
+
+            // dd($query);
+            if (count($doctors) > 0) {
+                $avilabledate[] = $startDate;
             }
-            $startDate=date('Y-m-d', strtotime($startDate. ' + 1 days'));
+            $startDate = date('Y-m-d', strtotime($startDate . ' + 1 days'));
         }
         return Globalfunction::sendDataResponse(true, 'details fetched successfully', $avilabledate);
     }
@@ -978,8 +980,8 @@ DB::enableQueryLog();
         $item->degrees = $request->degrees;
         $item->about_youself = $request->about_youself;
         $item->educational_journey = $request->educational_journey;
-        if(!empty($path))
-        $item->image = $path;
+        if (!empty($path))
+            $item->image = $path;
         $item->save();
 
         return Globalfunction::sendSimpleResponse(true, 'Details Updated successfully');
@@ -1001,57 +1003,52 @@ DB::enableQueryLog();
 
     function viewDoctorProfile($doctorId)
     {
-        $doctor = Doctors::with(['bankAccount', 'category'])->findOrFail($doctorId);
+        $doctor = Doctors::with(['bankAccount'])->findOrFail($doctorId);
         $settings = GlobalSettings::first();
+
+        // بما إن الـ category_id اتعمله cast فـ هو Array أصلاً
+        $categoryIds = $doctor->category_id ?? [];
+
+        // هات الكاتيجوريز
+        $categories = DoctorCategories::whereIn('id', $categoryIds)->get();
+
+        // رجعهم مع الدكتور
+        $doctor->categories = $categories;
 
         $slots = DoctorAppointmentSlots::where('doctor_id', $doctorId)->get();
         foreach ($slots as $slot) {
             $slot->time = GlobalFunction::formateTimeString($slot->time);
         }
 
-
-
-        $mondaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 1;
-        });
-        $tuesdaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 2;
-        });
-        $wednesdaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 3;
-        });
-        $thursdaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 4;
-        });
-        $fridaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 5;
-        });
-        $saturdaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 6;
-        });
-        $sundaySlots = array_filter($slots->toArray(), function ($slot) {
-            return $slot['weekday'] === 7;
-        });
+        $mondaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 1);
+        $tuesdaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 2);
+        $wednesdaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 3);
+        $thursdaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 4);
+        $fridaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 5);
+        $saturdaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 6);
+        $sundaySlots = array_filter($slots->toArray(), fn($slot) => $slot['weekday'] === 7);
 
         return view('viewDoctorProfile', [
             'doctor' => $doctor,
             'settings' => $settings,
-            'doctorStatus' => array(
+            'doctorStatus' => [
                 'statusDoctorPending' => Constants::statusDoctorPending,
                 'statusDoctorApproved' => Constants::statusDoctorApproved,
                 'statusDoctorBanned' => Constants::statusDoctorBanned,
-            ),
-            'slots' => array(
-                'mondaySlots' => $mondaySlots,
-                'tuesdaySlots' => $tuesdaySlots,
+            ],
+            'slots' => [
+                'mondaySlots'   => $mondaySlots,
+                'tuesdaySlots'  => $tuesdaySlots,
                 'wednesdaySlots' => $wednesdaySlots,
                 'thursdaySlots' => $thursdaySlots,
-                'fridaySlots' => $fridaySlots,
+                'fridaySlots'   => $fridaySlots,
                 'saturdaySlots' => $saturdaySlots,
-                'sundaySlots' => $sundaySlots,
-            )
+                'sundaySlots'   => $sundaySlots,
+            ]
         ]);
     }
+
+
 
     function rejectDoctorWithdrawal(Request $request)
     {
@@ -1781,10 +1778,18 @@ DB::enableQueryLog();
                 $gender = '<span  class="badge bg-info text-white ">' . __("Female") . '</span>';
             }
 
+            // ✅ تعديل عرض الكاتيجوري
+            $categoryNames = '';
+            if (!empty($item->category_id)) {
+                $catIds = is_array($item->category_id) ? $item->category_id : json_decode($item->category_id, true);
+                if (!empty($catIds)) {
+                    $categories = DoctorCategories::whereIn('id', $catIds)->pluck('title')->toArray();
+                    $categoryNames = implode(', ', $categories);
+                }
+            }
 
             $action = $view;
 
-            $category = $item->category == null ? '' : $item->category->title;
             $cats = DoctorCategories::where('is_deleted', 0)->get();
             $data[] = array(
                 $image,
@@ -1793,7 +1798,7 @@ DB::enableQueryLog();
                 $item->doctor_number,
                 $status,
                 $gender,
-                $category,
+                $categoryNames, // 👈 هنا رجعنا أسماء الكاتيجوريز
                 $item->experience_year,
                 $item->total_patients_cured,
                 $settings->currency . $item->lifetime_earnings,
@@ -1888,7 +1893,7 @@ DB::enableQueryLog();
         $rules = [
             'page' => 'required'
         ];
-        $start=($request->page-1)*10;
+        $start = ($request->page - 1) * 10;
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             $messages = $validator->errors()->all();
@@ -1906,10 +1911,10 @@ DB::enableQueryLog();
         if ($request->has('job_title_id')) {
             $query->where('job_title_id', $request->job_title_id);
         }
-          if ($request->has('start_price')&&$request->has('end_price')) {
+        if ($request->has('start_price') && $request->has('end_price')) {
             $query->whereBetween('consultation_fee', [$request->start_price, $request->end_price]);
         }
-         if ($request->has('keyword')) {
+        if ($request->has('keyword')) {
             $query->where('name', 'LIKE', "%{$request->keyword}%");
         }
         if ($request->has('sort_type')) {
@@ -1924,47 +1929,47 @@ DB::enableQueryLog();
             }
         }
         if ($request->has('day')) {
-             $timezone = Carbon::now()->setTimezone("Africa/Cairo");
-          $currentDate=date_create($request->day);
-        //  dd(date_format($currentDate,"w"));
-        if(date_format($currentDate,"w")==0){
-            $weekday=7;
-        }else{
-            $weekday=date_format($currentDate,"w");
+            $timezone = Carbon::now()->setTimezone("Africa/Cairo");
+            $currentDate = date_create($request->day);
+            //  dd(date_format($currentDate,"w"));
+            if (date_format($currentDate, "w") == 0) {
+                $weekday = 7;
+            } else {
+                $weekday = date_format($currentDate, "w");
+            }
+            $scopeAvailableSlot = function ($q) use ($currentDate, $weekday) {
+                $q->where("booking_limit", ">", 0)
+                    ->where("weekday", $weekday);
+            };
+            //  dd($scopeAvailableSlot);
+            $scopeAvailableAppointment = function ($q) use ($currentDate) {
+                $q->where("status", Constants::orderAccepted)
+                    ->where("date", $currentDate);
+            };
+            $query->with(['slots' => $scopeAvailableSlot])
+                ->whereHas("slots", $scopeAvailableSlot)
+                ->whereDoesntHave("appointments", $scopeAvailableAppointment);
         }
-          $scopeAvailableSlot = function ($q) use ($currentDate,$weekday) {
-            $q->where("booking_limit", ">", 0)
-                ->where("weekday", $weekday);
-        };
-        //  dd($scopeAvailableSlot);
-        $scopeAvailableAppointment = function ($q) use ($currentDate) {
-            $q->where("status", Constants::orderAccepted)
-                ->where("date", $currentDate);
-        };
-        $query->with(['slots' => $scopeAvailableSlot])
-            ->whereHas("slots", $scopeAvailableSlot)
-            ->whereDoesntHave("appointments", $scopeAvailableAppointment);
-        }
-         $totalDoctorsCount = $query->where('status', Constants::statusDoctorApproved)
-        ->where('on_vacation', Constants::doctorNotOnVacation)
-        ->count();
+        $totalDoctorsCount = $query->where('status', Constants::statusDoctorApproved)
+            ->where('on_vacation', Constants::doctorNotOnVacation)
+            ->count();
         $doctors = $query
             ->where('status', Constants::statusDoctorApproved)
             ->where('on_vacation', Constants::doctorNotOnVacation)
             ->offset($start)
             ->limit(10)
             ->get();
-            
-        if ($request->has('day')&&$request->day<$timezone->format("Y-m-d")) {
-        $doctors=[];
+
+        if ($request->has('day') && $request->day < $timezone->format("Y-m-d")) {
+            $doctors = [];
         }
-       
-        if($totalDoctorsCount>10)
-        intval($numPages=ceil($totalDoctorsCount/10));
+
+        if ($totalDoctorsCount > 10)
+            intval($numPages = ceil($totalDoctorsCount / 10));
         else
-        $numPages=1;
-        $currentPage=intval($request->page);
-        return GlobalFunction::sendDataResponse(true, 'Data fetched successfully', $doctors,$numPages,$currentPage);
+            $numPages = 1;
+        $currentPage = intval($request->page);
+        return GlobalFunction::sendDataResponse(true, 'Data fetched successfully', $doctors, $numPages, $currentPage);
     }
     function manageDrBankAccount(Request $request)
     {
@@ -2084,7 +2089,7 @@ DB::enableQueryLog();
         }
         return GlobalFunction::sendSimpleResponse(false, 'Holiday exists already!');
     }
-     function addDoctorAdds(Request $request)
+    function addDoctorAdds(Request $request)
     {
         $rules = [
             'start_date' => 'required',
@@ -2101,7 +2106,7 @@ DB::enableQueryLog();
             $msg = $messages[0];
             return response()->json(['status' => false, 'message' => $msg]);
         }
-        
+
         $doctor = Doctors::where('id', $request->doctor_id)->first();
         if ($doctor == null) {
             return GlobalFunction::sendSimpleResponse(false, 'Doctor does not exists!');
@@ -2119,8 +2124,8 @@ DB::enableQueryLog();
             $add->total_amount = $request->total_amount;
             $add->payment_staus = $request->payment_staus;
             $add->save();
-            $end_date=date('Y-m-d', strtotime($request->start_date. ' +'. $request->number_days.'days'));
-            $doctor->end_date_add=$end_date;
+            $end_date = date('Y-m-d', strtotime($request->start_date . ' +' . $request->number_days . 'days'));
+            $doctor->end_date_add = $end_date;
             $doctor->save();
             return GlobalFunction::sendSimpleResponse(true, 'Add added successfully');
         }
@@ -2186,7 +2191,7 @@ DB::enableQueryLog();
     }
     function addAppointmentSlotsWeb(Request $request)
     {
-        
+
         $rules = [
             'time' => 'required',
             'weekday' => 'required',
@@ -2205,8 +2210,8 @@ DB::enableQueryLog();
         if ($doctor == null) {
             return GlobalFunction::sendSimpleResponse(false, 'Doctor does not exists!');
         }
-        $time=Str::remove(":",$request->time);
-        
+        $time = Str::remove(":", $request->time);
+
 
         $slot = DoctorAppointmentSlots::where('time', $time)
             ->where('weekday', $request->weekday)
@@ -2215,7 +2220,7 @@ DB::enableQueryLog();
 
         if ($slot == null) {
             $slot = new DoctorAppointmentSlots();
-            $slot->time =$time;
+            $slot->time = $time;
             $slot->weekday = $request->weekday;
             $slot->doctor_id = $request->doctor_id;
             $slot->booking_limit = $request->booking_limit;
@@ -2223,8 +2228,8 @@ DB::enableQueryLog();
             $slot->save();
 
             $slots = DoctorAppointmentSlots::where('doctor_id', $request->doctor_id)->get();
-            
-             return Globalfunction::sendSimpleResponse(true, 'Slot added successfully');
+
+            return Globalfunction::sendSimpleResponse(true, 'Slot added successfully');
         } else {
             return GlobalFunction::sendSimpleResponse(false, 'This Slot is available already!');
         }
@@ -2775,11 +2780,11 @@ DB::enableQueryLog();
 
         return GlobalFunction::sendDataResponse(true, 'data fetched successfully', $cats);
     }
-     function fetchDoctorSubCategories()
+    function fetchDoctorSubCategories()
     {
-     
-            $cats = DoctorCategories::where('is_deleted', 0)->where('parent','!=' ,0)->get();
-       
+
+        $cats = DoctorCategories::where('is_deleted', 0)->where('parent', '!=', 0)->get();
+
 
         return GlobalFunction::sendDataResponse(true, 'data fetched successfully', $cats);
     }
@@ -2819,7 +2824,6 @@ DB::enableQueryLog();
     {
         $rules = [
             'identity' => 'required',
-
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -2830,23 +2834,33 @@ DB::enableQueryLog();
         }
 
         $doctor = Doctors::where('identity', $request->identity)->first();
+
+        // خزن الـ category_id كـ Array أو JSON حسب نوع العمود
+        $categoryIds = $request->category_id;
+
         if ($doctor == null) {
+            // دكتور جديد
             $doctor = new Doctors();
             $doctor->identity = $request->identity;
             $doctor->name = $request->name;
-            $doctor->category_id = $request->category_id;
+            $doctor->category_id = $categoryIds;  // Laravel هيخزن JSON لو العمود نوعه JSON
             $doctor->doctor_number = GlobalFunction::generateDoctorNumber();
             $doctor->save();
 
             $doctor = Doctors::find($doctor->id);
 
-            return GlobalFunction::sendDataResponse(true, 'Doctor Data fetched successfully', $doctor);
+            return GlobalFunction::sendDataResponse(true, 'Doctor created successfully', $doctor);
         } else {
+            // تحديث دكتور قديم
             $doctor->device_token = $request->device_token;
+            $doctor->category_id = $categoryIds;
             $doctor->save();
-            return GlobalFunction::sendDataResponse(true, 'Doctor Data fetched successfully', $doctor);
+
+            return GlobalFunction::sendDataResponse(true, 'Doctor updated successfully', $doctor);
         }
     }
+
+
     function suggestDoctorCategory(Request $request)
     {
         $rules = [
@@ -3031,7 +3045,7 @@ DB::enableQueryLog();
 
         return GlobalFunction::sendDataResponse(true, 'Doctor details updated successfully', $doctor);
     }
-      function updateDoctorOnline(Request $request)
+    function updateDoctorOnline(Request $request)
     {
         $rules = [
             'doctor_id' => 'required'
@@ -3051,13 +3065,13 @@ DB::enableQueryLog();
         if ($request->has('doctor_online')) {
             $doctor->doctor_online = $request->doctor_online;
         }
-         $doctor->save();
+        $doctor->save();
 
         $doctor = GlobalFunction::generateDoctorFullData($doctor->id);
 
         return GlobalFunction::sendDataResponse(true, 'Doctor details updated successfully', $doctor);
     }
-     function ChickDoctorOnline(Request $request)
+    function ChickDoctorOnline(Request $request)
     {
         $rules = [
             'doctor_id' => 'required'
@@ -3074,21 +3088,18 @@ DB::enableQueryLog();
         if ($doctor == null) {
             return GlobalFunction::sendSimpleResponse(false, 'Doctor does not exists!');
         }
-        if ($doctor->doctor_online==1) {
-             return GlobalFunction::sendSimpleResponse(true, 'Doctor online');
-        }else{
+        if ($doctor->doctor_online == 1) {
+            return GlobalFunction::sendSimpleResponse(true, 'Doctor online');
+        } else {
             return GlobalFunction::sendSimpleResponse(false, 'Doctor offline');
         }
-       
     }
-     function fechDoctorOnline()
+    function fechDoctorOnline()
     {
-        
+
         $rows = Doctors::where('doctor_online', 1)->orderBy('id', 'DESC')->get();
-        
-        return GlobalFunction::sendDataResponse(true, 'Data feched',$rows);
-        
-       
+
+        return GlobalFunction::sendDataResponse(true, 'Data feched', $rows);
     }
     function logOutDoctor(Request $request)
     {

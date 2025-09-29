@@ -84,6 +84,8 @@ Route::post('doctorRegistration', [DoctorController::class, 'doctorRegistration'
 Route::post('updateDoctorDetails', [DoctorController::class, 'updateDoctorDetails'])->middleware('checkHeader');
 Route::post('updateDoctorOnline', [DoctorController::class, 'updateDoctorOnline'])->middleware('checkHeader');
 
+Route::post('doctor/register/google', [DoctorController::class, 'registerDoctorGoogle']);
+
 Route::get('fechDoctorOnline', [DoctorController::class, 'fechDoctorOnline'])->middleware('checkHeader');
 Route::post('ChickDoctorOnline', [DoctorController::class, 'ChickDoctorOnline'])->middleware('checkHeader');
 Route::post('deleteDoctorAccount', [DoctorController::class, 'deleteDoctorAccount'])->middleware('checkHeader');

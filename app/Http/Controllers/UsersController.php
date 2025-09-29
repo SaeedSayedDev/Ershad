@@ -1531,35 +1531,6 @@ class UsersController extends Controller
 
 
 
-    public function registerUserGoogle1(Request $request)
-    {
-        try {
-            // Decode and validate (we know this works)
-            $parts = explode('.', $request->id_token);
-            $payload = json_decode(base64_decode($parts[1]), true);
-
-            // Extract user data
-            $googleId = $payload['sub'];
-            $name     = $payload['name'] ?? null;
-            $email    = $payload['email'] ?? null;
-
-            dd([
-                'step' => 'user_data_extracted',
-                'google_id' => $googleId,
-                'name' => $name,
-                'email' => $email,
-                'device_type' => $request->device_type,
-                'device_token' => $request->device_token
-            ]);
-        } catch (\Exception $e) {
-            dd([
-                'step' => 'exception_in_extraction',
-                'error' => $e->getMessage(),
-                'line' => $e->getLine()
-            ]);
-        }
-    }
-
 
 
     public function registerUserGoogle(Request $request)

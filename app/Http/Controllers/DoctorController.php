@@ -3131,4 +3131,8 @@ class DoctorController extends Controller
         $cats = DoctorCategories::all();
         return GlobalFunction::sendDataResponse(true, 'cats fetched successfully!', $cats);
     }
+
+
+    // public function registerDoctorGoogle(Request $request){}
+
 }

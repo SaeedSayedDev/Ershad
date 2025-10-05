@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\AddsController;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\LoyaltyPointsController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PromoCodeController;
@@ -278,3 +280,9 @@ Route::get('termsOfUse', [PagesController::class, 'termsOfUse'])->name('termsOfU
 
 // Cleanup Routes
 Route::get('cleanDatabase', [SettingsController::class, 'cleanDatabase'])->name('cleanDatabase');
+
+
+// Adds
+Route::get('/adds/update-loyalty-points', [LoyaltyPointsController::class, 'index'])->name('loyaltyPoints.index');
+Route::put('/adds/update-loyalty-points', [LoyaltyPointsController::class, 'updateLoyaltyPoints'])->name('loyaltyPoints.updateLoyaltyPoints');
+

@@ -112,6 +112,10 @@ Route::post('checkMobileNumberExists', [DoctorController::class, 'checkMobileNum
 Route::get('availableDoctorsNow', [DoctorController::class, 'availableDoctorsNow'])->middleware('checkHeader');
 Route::post('availableDoctorsByDay', [DoctorController::class, 'availableDoctorsByDay'])->middleware('checkHeader');
 Route::post('addDoctorAdds', [DoctorController::class, 'addDoctorAdds'])->middleware('checkHeader');
+Route::get('callpack_payment_add_success', [DoctorController::class, 'callpack_payment_add_success']);
+Route::get('callpack_payment_add_failure', [DoctorController::class, 'callpack_payment_add_failure']);
+Route::get('get_add_price_per_day', [DoctorController::class, 'get_add_price_per_day']);
+
 // Appointments
 Route::post('fetchAppointmentRequests', [AppointmentController::class, 'fetchAppointmentRequests'])->middleware('checkHeader');
 Route::post('fetchAppointmentDetails', [AppointmentController::class, 'fetchAppointmentDetails']);

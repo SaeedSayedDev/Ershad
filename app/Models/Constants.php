@@ -68,6 +68,11 @@ final class Constants
     const orderCancelled = 4;
     const orderWittingPayment = 5;
 
+    // Adds status
+    const addsDeclined = 0;
+    const addsAccepted = 1;
+    const addsPending = 2;
+
     // Promotion Status
     const promotionPending = 0;
     const promotionApproved = 1;

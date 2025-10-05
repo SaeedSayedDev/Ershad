@@ -17,7 +17,9 @@ use App\Models\GlobalSettings;
 use App\Models\PlatformData;
 use App\Models\PlatformEarningHistory;
 use App\Models\Prescriptions;
+use App\Models\Setting;
 use App\Models\Users;
+use App\Models\UserWalletRechargeLogs;
 use Google\Service\CloudSearch\Id;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -1834,8 +1836,35 @@ class AppointmentController extends Controller
     {
         $appointment = Appointments::where('id', $request->appointment_id)->with(['user', 'doctor', 'patient', 'documents'])->first();
         if (isset($appointment->status) && $appointment->status == 5) {
+            // dd('dd');
             $appointment->status = 1;
             $appointment->save();
+
+            try {
+                $user = Users::find($appointment->user_id);
+                $pointsPerAppointment = Setting::where('key', 'pointsPerAppointment')->value('value') ?? 0;
+                $valueOfEachPoint = Setting::where('key', 'valueOfEachPoint')->value('value') ?? 0;
+
+                $user->wallet = $user->wallet + ($pointsPerAppointment * $valueOfEachPoint);
+                $user->save();
+                GlobalFunction::addUserStatementEntry(
+                    $user->id,
+                    $appointment->appointment_number,
+                    ($pointsPerAppointment * $valueOfEachPoint),
+                    Constants::credit,
+                    2,
+                    'Reward Points for Appointment: ' . $appointment->appointment_number
+                );
+                // Recharge Wallet History
+                $rechargeLog = new UserWalletRechargeLogs();
+                $rechargeLog->user_id = $user->id;
+                $rechargeLog->amount = ($pointsPerAppointment * $valueOfEachPoint);
+                $rechargeLog->gateway = 'LoyaltyPoints';
+                $rechargeLog->transaction_id = 'LoyaltyPoints';
+                $rechargeLog->transaction_summary = 'LoyaltyPoints for Appointment: ' . $appointment->appointment_number;
+                $rechargeLog->save();
+            } catch (\Exception $e) {
+            }
         }
         $type = true;
         return view('success', ['type' => $type]);

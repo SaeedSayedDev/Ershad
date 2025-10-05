@@ -26,6 +26,7 @@ use App\Models\FaqCats;
 use App\Models\GlobalFunction;
 use App\Models\GlobalSettings;
 use App\Models\Prescriptions;
+use App\Models\Setting;
 use App\Models\Users;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -866,7 +867,7 @@ class DoctorController extends Controller
             }
 
             $doctor = '<a href="' . route('viewDoctorProfile', $item->doctor->id) . '"><span class="badge bg-primary text-white">
-                        ' . $item->doctor->name . '</span></a>';
+                            ' . $item->doctor->name . '</span></a>';
 
             $action = $delete;
             $data[] = array(
@@ -2091,6 +2092,9 @@ class DoctorController extends Controller
     }
     function addDoctorAdds(Request $request)
     {
+        if (DoctorAdds::count() >= 5)
+            return GlobalFunction::sendSimpleResponse(false, 'Adds are full!');
+
         $rules = [
             'start_date' => 'required',
             'doctor_id' => 'required',
@@ -2098,7 +2102,6 @@ class DoctorController extends Controller
             'payment_method' => 'required',
             'taxs' => 'required',
             'total_amount' => 'required',
-            'payment_staus' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -2122,15 +2125,52 @@ class DoctorController extends Controller
             $add->payment_method = $request->payment_method;
             $add->taxs = $request->taxs;
             $add->total_amount = $request->total_amount;
-            $add->payment_staus = $request->payment_staus;
+            $add->payment_staus = Constants::addsPending;
             $add->save();
             $end_date = date('Y-m-d', strtotime($request->start_date . ' +' . $request->number_days . 'days'));
             $doctor->end_date_add = $end_date;
             $doctor->save();
-            return GlobalFunction::sendSimpleResponse(true, 'Add added successfully');
+            return response()->json(['status' => true, 'message' => 'Add added successfully', 'data' => $add]);
         }
-        return GlobalFunction::sendSimpleResponse(false, 'Add exists already!');
+        return response()->json(['status' => false, 'message' => 'Add exists already!', 'data' => $add]);
     }
+
+    function callpack_payment_add_success(Request $request)
+    {
+        $add = DoctorAdds::where('doctor_id', $request->doctor_id)->with(['doctor'])->first();
+        if (!$add) {
+            return view('success', ['type' => false]);
+        }
+        if (isset($add->payment_staus) && $add->payment_staus == Constants::addsPending) {
+            $add->payment_staus = 1;
+            $add->save();
+            $type = true;
+            return view('success', ['type' => $type]);
+        }
+
+        $type = false;
+        return view('success', ['type' => $type]);
+    }
+    function callpack_payment_add_failure(Request $request)
+    {
+        $add = DoctorAdds::where('doctor_id', $request->doctor_id)->with(['doctor'])->first();
+        if (isset($add->payment_staus) && $add->payment_staus == Constants::addsPending) {
+            $add->payment_staus = 0;
+            $add->save();
+        }
+        $type = false;
+        return view('success', ['type' => $type]);
+    }
+
+    function get_add_price_per_day()
+    {
+        $settings = Setting::where('key', 'priceAddPerDay')->first();
+        if (isset($settings))
+            return GlobalFunction::sendDataResponse(true, 'data fetched successfully', (int)$settings->value);
+        else
+            return GlobalFunction::sendSimpleResponse(false, 'priceAddPerDay does not Exists');
+    }
+
     function deleteAppointmentSlot(Request $request)
     {
         $rules = [

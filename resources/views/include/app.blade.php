@@ -158,6 +158,13 @@
                                 <span>{{ __('Promo Codes') }}</span>
                             </a>
                         </li>
+
+                        <li class="sideBarli loyaltyPointsSideA">
+                            <a href="{{ route('loyaltyPoints.index') }}" class="nav-link">
+                                <i class="fas fa-percentage"></i>
+                                <span>{{ __('Loyalty Points') }}</span>
+                            </a>
+                        </li>
                         <li class="menu-header">{{ __('Business') }}</li>
 
                         <li class="sideBarli  userWithdrawsSideA">
@@ -211,7 +218,7 @@
                             <a href="{{ route('viewPrivacy') }}" class="nav-link"><i
                                     class="fas fa-info"></i><span>{{ __('Privacy Policy') }}</span></a>
                         </li>
-                       
+
                         <li class="sideBarli  termsSideA">
                             <a href="{{ route('viewTerms') }}" class="nav-link"><i
                                     class="fas fa-info"></i><span>{{ __('Terms Of Use') }}</span></a>

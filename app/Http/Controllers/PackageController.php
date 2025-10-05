@@ -154,20 +154,19 @@ class PackageController extends Controller
         $result = Package::orderBy('id', 'DESC')
             ->whereDays($request->number_days)
             ->first();
-            if($result){
-            $tax=Taxes::where('status', 1)->where('tax_title','adds tax')->first();
-            if($result->type==0){
-            $totaltax=($result->price*$tax->value)/100;
-            }else{
-                 $totaltax=$tax->value;
+        if ($result) {
+            $tax = Taxes::where('status', 1)->where('tax_title', 'adds tax')->first();
+            if ($result->type == 0) {
+                $totaltax = ($result->price * $tax->value) / 100;
+            } else {
+                $totaltax = $tax->value;
             }
-           $result->taxPrice= $totaltax;
-           $result->totalPrice= $totaltax+$result->price;
+            $result->taxPrice = $totaltax;
+            $result->totalPrice = $totaltax + $result->price;
 
-        return GlobalFunction::sendDataResponse(true, 'data fetched successfully', $result);
-            }else{
-                return response()->json(['status' => false, 'message' => "no data found!"]);
-            }
+            return GlobalFunction::sendDataResponse(true, 'data fetched successfully', $result);
+        } else {
+            return response()->json(['status' => false, 'message' => "no data found!"]);
+        }
     }
-
 }

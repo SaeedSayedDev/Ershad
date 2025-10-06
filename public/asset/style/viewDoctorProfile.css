@@ -6,6 +6,7 @@
     font-size: 20px !important;
     font-weight: bold !important;
 }
+
 .img-border {
     border: 2px solid #313131 !important;
 }
@@ -18,16 +19,19 @@
 .word-wrap td {
     white-space: normal !important;
 }
+
 .word-wrap tr th:nth-child(3),
 .word-wrap tr td:nth-child(3) {
     width: 200px !important;
     white-space: normal !important;
 }
+
 .salon_image {
     position: relative;
     margin-right: 15px;
     cursor: pointer;
 }
+
 .salon_image i {
     position: absolute;
     top: 5px;
@@ -51,6 +55,7 @@
 .w-70 {
     width: 70% !important;
 }
+
 .w-30 {
     width: 30% !important;
 }
@@ -58,6 +63,7 @@
 .starDisabled {
     color: rgb(184, 184, 184) !important;
 }
+
 .starActive {
     color: orangered !important;
 }
@@ -66,10 +72,12 @@
     font-size: 17px !important;
     color: rgb(255, 63, 63);
 }
+
 .ic-credit {
     font-size: 17px !important;
     color: rgb(69, 136, 72);
 }
+
 .text-debit {
     color: rgb(255, 63, 63);
 }
@@ -81,4 +89,33 @@
 .bank-details span {
     display: block;
     line-height: 18px;
+}
+
+.btn-close-slot {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-close-slot:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.badge.position-relative {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
 }

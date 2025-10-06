@@ -5,6 +5,129 @@
 @endsection
 
 @section('content')
+    <style>
+        .text-grey {
+            color: grey !important;
+        }
+
+        .p-data {
+            font-size: 20px !important;
+            font-weight: bold !important;
+        }
+
+        .img-border {
+            border: 2px solid #313131 !important;
+        }
+
+        .bg-cat-tag {
+            background: #d8f6fd;
+            color: #156779 !important;
+        }
+
+        .word-wrap td {
+            white-space: normal !important;
+        }
+
+        .word-wrap tr th:nth-child(3),
+        .word-wrap tr td:nth-child(3) {
+            width: 200px !important;
+            white-space: normal !important;
+        }
+
+        .salon_image {
+            position: relative;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .salon_image i {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ffffff4f;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 14px;
+            color: #fff;
+            backdrop-filter: blur(7px);
+        }
+
+        #tabGallery table.dataTable td {
+            white-space: normal !important;
+        }
+
+        .w-70 {
+            width: 70% !important;
+        }
+
+        .w-30 {
+            width: 30% !important;
+        }
+
+        .starDisabled {
+            color: rgb(184, 184, 184) !important;
+        }
+
+        .starActive {
+            color: orangered !important;
+        }
+
+        .ic-debit {
+            font-size: 17px !important;
+            color: rgb(255, 63, 63);
+        }
+
+        .ic-credit {
+            font-size: 17px !important;
+            color: rgb(69, 136, 72);
+        }
+
+        .text-debit {
+            color: rgb(255, 63, 63);
+        }
+
+        .text-credit {
+            color: rgb(69, 136, 72);
+        }
+
+        .bank-details span {
+            display: block;
+            line-height: 18px;
+        }
+
+        .btn-close-slot {
+            position: absolute;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close-slot:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .badge.position-relative {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+    </style>
     <input type="hidden" value="{{ $doctor->id }}" id="doctorId">
 
     <div class="card">
@@ -499,50 +622,163 @@
                 </div>
                 {{-- Slots --}}
                 <div role="tabpanel" class="tab-pane" id="tabSlots">
-
                     <div class="table-responsive col-12">
+
+                        <!-- Monday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Monday') }}</label>
-                            @foreach ($slots['mondaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['mondaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}">
+                                            @csrf
+                                            @method('DELETE') <!-- أضف هذا السطر -->
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
+                        <!-- Tuesday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Tuesday') }}</label>
-                            @foreach ($slots['tuesdaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['tuesdaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}"
+                                            style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
+                        <!-- Wednesday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Wednesday') }}</label>
-                            @foreach ($slots['wednesdaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['wednesdaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}"
+                                            style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
+                        <!-- Thursday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Thursday') }}</label>
-                            @foreach ($slots['thursdaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['thursdaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}"
+                                            style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
+                        <!-- Friday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Friday') }}</label>
-                            @foreach ($slots['thursdaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['fridaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}"
+                                            style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
+                        <!-- Saturday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Saturday') }}</label>
-                            @foreach ($slots['saturdaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['saturdaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}"
+                                            style="display: inline;"
+                                            onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')">
+                                            @csrf
+                                            @method('DELETE') <!-- أضف هذا السطر -->
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
+                        <!-- Sunday -->
                         <div class="mt-2">
                             <label class="mb-0 text-grey" for="">{{ __('Sunday') }}</label>
-                            @foreach ($slots['sundaySlots'] as $item)
-                                <span class="badge bg-info text-white ">{{ $item['time'] }}</span>
-                            @endforeach
+                            <div class="d-inline-block">
+                                @foreach ($slots['sundaySlots'] as $item)
+                                    <span class="badge bg-info text-white position-relative mr-1 mb-1"
+                                        style="padding-right: 28px;">
+                                        {{ $item['time'] }}
+                                        <form method="POST" action="{{ route('admin.delete.slot') }}"
+                                            style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="doctor_id" value="{{ $doctor->id }}">
+                                            <button type="submit" class="btn-close-slot"
+                                                onclick="return confirm('هل أنت متأكد من حذف هذا الموعد؟')"
+                                                title="{{ __('Delete') }}">×</button>
+                                        </form>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
+
                     </div>
                 </div>
 

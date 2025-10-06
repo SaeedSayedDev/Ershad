@@ -53,6 +53,7 @@ Route::post('fetchPendingDoctorsList', [DoctorController::class, 'fetchPendingDo
 Route::post('fetchBannedDoctorsList', [DoctorController::class, 'fetchBannedDoctorsList'])->middleware(['checkLogin'])->name('fetchBannedDoctorsList');
 Route::get('getDoctorCats', [DoctorController::class, 'getDoctorCats'])->middleware(['checkLogin'])->name('getDoctorCats');
 Route::post('addAppointmentSlotsWeb', [DoctorController::class, 'addAppointmentSlotsWeb'])->middleware('checkLogin');
+Route::delete('/admin/delete-slot', [DoctorController::class, 'deleteSlot'])->name('admin.delete.slot');
 
 // Appointments
 Route::get('appointments', [AppointmentController::class, 'appointments'])->middleware(['checkLogin'])->name('appointments');

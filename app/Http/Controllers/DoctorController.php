@@ -1050,6 +1050,37 @@ class DoctorController extends Controller
     }
 
 
+    public function deleteSlot(Request $request)
+    {
+        // try {
+            $slotId = $request->id;
+            $doctorId = $request->doctor_id;
+            // dd($slotId);    
+
+            // للتأكد من وصول البيانات
+            // \Log::info('Delete Slot Request', [
+            //     'slot_id' => $slotId,
+            //     'doctor_id' => $doctorId
+            // ]);
+            // تحقق من وجود الـ slot
+            $slot = DoctorAppointmentSlots::find($slotId);
+
+            if (!$slot) {
+                return redirect()->back()
+                    ->with('error', 'الموعد غير موجود');
+            }
+
+            $slot->delete();
+
+            return redirect()->back()
+                ->with('success', 'تم حذف الموعد بنجاح');
+        // } catch (\Exception $e) {
+        //     \Log::error('Delete Slot Error', ['error' => $e->getMessage()]);
+
+        //     return redirect()->back()
+        //         ->with('error', 'حدث خطأ أثناء الحذف');
+        // }
+    }
 
     function rejectDoctorWithdrawal(Request $request)
     {

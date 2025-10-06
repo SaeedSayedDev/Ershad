@@ -5,17 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\GlobalFunction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ArticleController extends Controller
 {
     function articles()
     {
-        return view('articles');
-        //articles.blade.php
+        $items = Article::with('interests')
+            ->select('id', 'title', 'image', 'content', 'created_at')
+            ->orderBy('id', 'DESC')
+            ->paginate(10); // هنا خليتها 10 عناصر في الصفحة
+
+        return view('articles', compact('items'));
     }
 
-    
+
+
     function fetchArticlesList(Request $request)
     {
         $totalData = Article::count();
@@ -86,14 +92,10 @@ class ArticleController extends Controller
             'title' => 'required',
             'content' => 'required',
             'image' => 'required',
+            'interests' => 'required|array',
         ];
 
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            $messages = $validator->errors()->all();
-            $msg = $messages[0];
-            return response()->json(['status' => false, 'message' => $msg]);
-        }
+        $request->validate($rules);
 
         $path = GlobalFunction::saveFileAndGivePath($request->image);
 
@@ -103,12 +105,15 @@ class ArticleController extends Controller
         $article->image = $path;
         $article->save();
 
-        return GlobalFunction::sendSimpleResponse(true, 'coupon added successfully!');
+        $article->interests()->sync($request->interests);
+
+        return redirect()->route('articles')->with('success', 'Article added successfully!');
     }
 
-    function editArticle(Request $request)
+    function editArticle(Request $request, $id)
     {
-        $article = Article::find($request->id);
+        $article = Article::findOrFail($id);
+
         $article->title = $request->title;
         $article->content = $request->content;
 
@@ -120,7 +125,11 @@ class ArticleController extends Controller
 
         $article->save();
 
-        return GlobalFunction::sendSimpleResponse(true, 'coupon edited successfully!');
+        if ($request->has('interests')) {
+            $article->interests()->sync($request->interests);
+        }
+
+        return redirect()->route('articles')->with('success', 'Article updated successfully!');
     }
 
     function deletearticle($id)
@@ -128,16 +137,17 @@ class ArticleController extends Controller
         $article = Article::find($id);
         GlobalFunction::deleteFile($article->image);
         $article->delete();
-        return GlobalFunction::sendSimpleResponse(true, 'coupon deleted successfully!');
+        return back();
     }
 
     function fetchArticles(Request $request)
     {
         $rules = [
-            'start' => 'required',
-            'count' => 'required',
+            'start' => 'required|integer|min:0',
+            'count' => 'required|integer|min:1|max:100',
+            'user_id' => 'required|integer',
         ];
-        
+
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             $messages = $validator->errors()->all();
@@ -145,7 +155,36 @@ class ArticleController extends Controller
             return response()->json(['status' => false, 'message' => $msg]);
         }
 
-        $result = Article::orderBy('id', 'DESC')
+        $userId = $request->user_id;
+
+        // Get user's interest IDs
+        $userInterests = DB::table('user_interests')
+            ->where('user_id', $userId)
+            ->pluck('interest_id')
+            ->toArray();
+
+        // Build the query
+        $query = Article::with('interests');
+
+        // If user has interests, prioritize matching articles
+        if (!empty($userInterests)) {
+            // Get article IDs that match user's interests
+            $matchingArticleIds = DB::table('article_interests')
+                ->whereIn('interest_id', $userInterests)
+                ->whereNotNull('article_id')
+                ->distinct()
+                ->pluck('article_id')
+                ->toArray();
+
+            if (!empty($matchingArticleIds)) {
+                // Order by: matching articles first (using FIELD), then by newest
+                $query->orderByRaw('FIELD(id, ' . implode(',', $matchingArticleIds) . ') DESC');
+            }
+        }
+
+        // Always order by newest as secondary sort
+        $result = $query
+            ->orderBy('id', 'DESC')
             ->offset($request->start)
             ->limit($request->count)
             ->get();

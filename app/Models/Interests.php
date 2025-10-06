@@ -9,4 +9,8 @@ class Interests extends Model
 {
     use HasFactory;
     public $table = "interests";
+    public function articles()
+    {
+        return $this->belongsToMany(Article::class, 'article_interests', 'interest_id', 'article_id');
+    }
 }

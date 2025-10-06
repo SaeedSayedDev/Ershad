@@ -1773,6 +1773,12 @@ class AppointmentController extends Controller
         // Deducting Money From Wallet
         if ($request->payment_type == 'wallet') {
             $user->wallet = $user->wallet - $request->payable_amount;
+
+            $pointsPerAppointment = (int)Setting::where('key', 'pointsPerAppointment')->value('value') ?? 0;
+            $valueOfEachPoint = (float)Setting::where('key', 'valueOfEachPoint')->value('value') ?? 0;
+            $user->wallet = $user->wallet + ($pointsPerAppointment * $valueOfEachPoint);
+
+
             $user->save();
         }
         // Send Push to user
@@ -1808,6 +1814,11 @@ class AppointmentController extends Controller
         if ($appointment->status == 5) {
             $user = Users::find($request->user_id);
             $user->wallet = $user->wallet - $request->payable_amount;
+
+            $pointsPerAppointment = (int)Setting::where('key', 'pointsPerAppointment')->value('value') ?? 0;
+            $valueOfEachPoint = (float)Setting::where('key', 'valueOfEachPoint')->value('value') ?? 0;
+            $user->wallet = $user->wallet + ($pointsPerAppointment * $valueOfEachPoint);
+
             $user->save();
             GlobalFunction::addUserStatementEntry(
                 $user->id,

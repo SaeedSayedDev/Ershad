@@ -211,11 +211,15 @@ Route::post('editQuestion', [AiController::class, 'editQuestion'])->middleware([
 Route::get('deleteQuestion/{id}', [AiController::class, 'deleteQuestion'])->middleware(['checkLogin'])->name('deleteQuestion');
 
 // Articles
+// Route::get('articles', [ArticleController::class, 'articles'])->middleware(['checkLogin'])->name('articles');
+// Route::post('fetchArticlesList', [ArticleController::class, 'fetchArticlesList'])->middleware(['checkLogin'])->name('fetchArticlesList');
+// Route::post('addArticle', [ArticleController::class, 'addArticle'])->middleware(['checkLogin'])->name('addArticle');
+// Route::post('editArticle', [ArticleController::class, 'editArticle'])->middleware(['checkLogin'])->name('editArticle');
+// Route::get('deleteArticle/{id}', [ArticleController::class, 'deleteArticle'])->middleware(['checkLogin'])->name('deleteArticle');
 Route::get('articles', [ArticleController::class, 'articles'])->middleware(['checkLogin'])->name('articles');
-Route::post('fetchArticlesList', [ArticleController::class, 'fetchArticlesList'])->middleware(['checkLogin'])->name('fetchArticlesList');
-Route::post('addArticle', [ArticleController::class, 'addArticle'])->middleware(['checkLogin'])->name('addArticle');
-Route::post('editArticle', [ArticleController::class, 'editArticle'])->middleware(['checkLogin'])->name('editArticle');
-Route::get('deleteArticle/{id}', [ArticleController::class, 'deleteArticle'])->middleware(['checkLogin'])->name('deleteArticle');
+Route::post('articles/store', [ArticleController::class, 'addArticle'])->middleware(['checkLogin'])->name('articles.store');
+Route::post('articles/update/{id}', [ArticleController::class, 'editArticle'])->middleware(['checkLogin'])->name('articles.update');
+Route::delete('articles/delete/{id}', [ArticleController::class, 'deleteArticle'])->middleware(['checkLogin'])->name('articles.delete');
 
 // Packages
 Route::get('packages', [PackageController::class, 'packages'])->middleware(['checkLogin'])->name('packages');
@@ -285,4 +289,3 @@ Route::get('cleanDatabase', [SettingsController::class, 'cleanDatabase'])->name(
 // Adds
 Route::get('/adds/update-loyalty-points', [LoyaltyPointsController::class, 'index'])->name('loyaltyPoints.index');
 Route::put('/adds/update-loyalty-points', [LoyaltyPointsController::class, 'updateLoyaltyPoints'])->name('loyaltyPoints.updateLoyaltyPoints');
-

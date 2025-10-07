@@ -1053,27 +1053,27 @@ class DoctorController extends Controller
     public function deleteSlot(Request $request)
     {
         // try {
-            $slotId = $request->id;
-            $doctorId = $request->doctor_id;
-            // dd($slotId);    
+        $slotId = $request->id;
+        $doctorId = $request->doctor_id;
+        // dd($slotId);    
 
-            // للتأكد من وصول البيانات
-            // \Log::info('Delete Slot Request', [
-            //     'slot_id' => $slotId,
-            //     'doctor_id' => $doctorId
-            // ]);
-            // تحقق من وجود الـ slot
-            $slot = DoctorAppointmentSlots::find($slotId);
+        // للتأكد من وصول البيانات
+        // \Log::info('Delete Slot Request', [
+        //     'slot_id' => $slotId,
+        //     'doctor_id' => $doctorId
+        // ]);
+        // تحقق من وجود الـ slot
+        $slot = DoctorAppointmentSlots::find($slotId);
 
-            if (!$slot) {
-                return redirect()->back()
-                    ->with('error', 'الموعد غير موجود');
-            }
-
-            $slot->delete();
-
+        if (!$slot) {
             return redirect()->back()
-                ->with('success', 'تم حذف الموعد بنجاح');
+                ->with('error', 'الموعد غير موجود');
+        }
+
+        $slot->delete();
+
+        return redirect()->back()
+            ->with('success', 'تم حذف الموعد بنجاح');
         // } catch (\Exception $e) {
         //     \Log::error('Delete Slot Error', ['error' => $e->getMessage()]);
 
@@ -1927,13 +1927,30 @@ class DoctorController extends Controller
         ];
         $start = ($request->page - 1) * 10;
         $validator = Validator::make($request->all(), $rules);
+
         if ($validator->fails()) {
             $messages = $validator->errors()->all();
             $msg = $messages[0];
             return response()->json(['status' => false, 'message' => $msg]);
         }
-        $query = Doctors::query();
 
+        $today = Carbon::now('Africa/Cairo')->toDateString();
+
+        // ✅ نبدأ الاستعلام مع ترتيب الإعلانات والحجوزات
+        $query = Doctors::query()
+            ->leftJoin('doctor_adds', function ($join) use ($today) {
+                $join->on('doctors.id', '=', 'doctor_adds.doctor_id')
+                    ->where('doctor_adds.payment_staus', 1)
+                    // إعلان مازال ساري
+                    ->whereRaw('DATE_ADD(doctor_adds.start_date, INTERVAL doctor_adds.number_days DAY) >= ?', [$today]);
+            })
+            ->leftJoin('appointments', 'doctors.id', '=', 'appointments.doctor_id')
+            ->select('doctors.*')
+            ->selectRaw('COUNT(DISTINCT appointments.id) as appointments_count')
+            ->selectRaw('MAX(CASE WHEN doctor_adds.id IS NOT NULL THEN 1 ELSE 0 END) as has_paid_add')
+            ->groupBy('doctors.id');
+
+        // ✅ فلاتر البحث
         if ($request->has('gender')) {
             $query->where('gender', $request->gender);
         }
@@ -1949,6 +1966,8 @@ class DoctorController extends Controller
         if ($request->has('keyword')) {
             $query->where('name', 'LIKE', "%{$request->keyword}%");
         }
+
+        // ✅ ترتيب إضافي حسب sort_type (لو المستخدم محدد نوع الترتيب)
         if ($request->has('sort_type')) {
             if ($request->sort_type == Constants::sortTypePriceLow) {
                 $query->orderBy('consultation_fee', 'ASC');
@@ -1960,31 +1979,40 @@ class DoctorController extends Controller
                 $query->orderBy('rating', 'DESC');
             }
         }
+
+        // ✅ فلتر اليوم (slots & appointments)
         if ($request->has('day')) {
             $timezone = Carbon::now()->setTimezone("Africa/Cairo");
             $currentDate = date_create($request->day);
-            //  dd(date_format($currentDate,"w"));
-            if (date_format($currentDate, "w") == 0) {
-                $weekday = 7;
-            } else {
-                $weekday = date_format($currentDate, "w");
-            }
+            $weekday = (date_format($currentDate, "w") == 0) ? 7 : date_format($currentDate, "w");
+
             $scopeAvailableSlot = function ($q) use ($currentDate, $weekday) {
                 $q->where("booking_limit", ">", 0)
                     ->where("weekday", $weekday);
             };
-            //  dd($scopeAvailableSlot);
+
             $scopeAvailableAppointment = function ($q) use ($currentDate) {
                 $q->where("status", Constants::orderAccepted)
                     ->where("date", $currentDate);
             };
+
             $query->with(['slots' => $scopeAvailableSlot])
                 ->whereHas("slots", $scopeAvailableSlot)
                 ->whereDoesntHave("appointments", $scopeAvailableAppointment);
         }
-        $totalDoctorsCount = $query->where('status', Constants::statusDoctorApproved)
+
+        // ✅ الترتيب الأساسي المطلوب
+        $query->orderByDesc('has_paid_add')
+            ->orderByDesc('appointments_count');
+
+        // ✅ الفلاتر النهائية + pagination
+        $filteredQuery = clone $query;
+
+        $totalDoctorsCount = $filteredQuery
+            ->where('status', Constants::statusDoctorApproved)
             ->where('on_vacation', Constants::doctorNotOnVacation)
-            ->count();
+            ->count(DB::raw('DISTINCT doctors.id'));
+
         $doctors = $query
             ->where('status', Constants::statusDoctorApproved)
             ->where('on_vacation', Constants::doctorNotOnVacation)
@@ -1992,17 +2020,19 @@ class DoctorController extends Controller
             ->limit(10)
             ->get();
 
-        if ($request->has('day') && $request->day < $timezone->format("Y-m-d")) {
+        if ($request->has('day') && $request->day < $today) {
             $doctors = [];
         }
 
-        if ($totalDoctorsCount > 10)
-            intval($numPages = ceil($totalDoctorsCount / 10));
-        else
-            $numPages = 1;
+        $numPages = ($totalDoctorsCount > 10)
+            ? intval(ceil($totalDoctorsCount / 10))
+            : 1;
+
         $currentPage = intval($request->page);
+
         return GlobalFunction::sendDataResponse(true, 'Data fetched successfully', $doctors, $numPages, $currentPage);
     }
+
     function manageDrBankAccount(Request $request)
     {
         $rules = [
